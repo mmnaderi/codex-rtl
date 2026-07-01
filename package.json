@@ -1,0 +1,43 @@
+{
+  "name": "codex-rtl",
+  "version": "0.9.0-beta.0",
+  "description": "A smart RTL (Right-to-Left) patcher with UI settings for the Codex application.",
+  "main": "./bin/index.js",
+  "bin": {
+    "codex-rtl": "./bin/index.js"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mmnaderi/codex-rtl.git"
+  },
+  "keywords": [
+    "codex",
+    "rtl",
+    "persian",
+    "arabic",
+    "hebrew",
+    "patcher",
+    "electron",
+    "asar"
+  ],
+  "author": "mmnaderi <mmnaderi.ir@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mmnaderi/codex-rtl/issues"
+  },
+  "homepage": "https://github.com/mmnaderi/codex-rtl#readme",
+  "dependencies": {
+    "@electron/asar": "^4.2.0",
+    "ora": "^9.4.1",
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2"
+  },
+  "type": "module"
+}
