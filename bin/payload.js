@@ -270,7 +270,7 @@ widgetWrapper.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                   <span class="font-medium text-xs text-token-text-secondary" style="font-size: 12px;">Line Height</span>
                   <div style="display: flex; align-items: center; gap: 8px;">
-                    <input id="rtl-lh-input" type="range" min="1.2" max="2.5" step="0.1" value="${savedLH}" style="width: 80px; cursor: pointer;">
+                    <input id="rtl-lh-input" type="range" min="1.2" max="2.5" step="0.1" value="${savedLH}" style="width: 80px; cursor: pointer; accent-color: var(--color-token-charts-blue, #339cff);">
                     <button id="rtl-lh-reset" type="button" class="text-token-text-primary opacity-50 hover:opacity-100 transition-opacity cursor-pointer text-sm" style="background: none; border: none; padding: 0;">↺</button>
                   </div>
                 </div>
