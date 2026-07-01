@@ -62,8 +62,41 @@ if (!document.getElementById('rtl-widget-style')) {
         .rtl-tooltip {
             visibility: hidden;
             opacity: 0;
-            transition: opacity 0.2s ease-in-out;
+            transition: opacity 0.15s ease-in-out;
             pointer-events: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 8px;
+            width: 200px;
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 99999;
+            white-space: normal;
+            text-align: center;
+            background: var(--token-dropdown-background, #202123);
+            border: 1px solid var(--border-medium, #4d4d4d);
+            color: var(--color-token-foreground, #fff);
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .rtl-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--border-medium, #4d4d4d) transparent transparent transparent;
+        }
+        .rtl-info-icon {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
         .rtl-info-icon:hover .rtl-tooltip {
             visibility: visible;
@@ -80,7 +113,7 @@ if (!document.getElementById('rtl-widget-style')) {
             text-decoration: none;
             padding-top: 4px;
             padding-bottom: 2px;
-            transition: all 0.3s ease-in-out;
+            transition: all 0.15s ease-in-out;
             color: var(--color-token-foreground, #fff) !important;
         }
         .rtl-github-link:hover {
@@ -262,7 +295,13 @@ widgetWrapper.innerHTML = `
             
             <div id="rtl-settings-wrapper" class="flex flex-col gap-2 transition-all duration-300" style="opacity: ${isRTL ? '1' : '0.4'}; pointer-events: ${isRTL ? 'auto' : 'none'}; display: flex; flex-direction: column; gap: 8px; transition: opacity 0.3s;">
                 <div class="flex items-center justify-between gap-2 px-1 mt-1" style="display: flex; justify-content: space-between; align-items: center;">
-                  <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Force RTL</span>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Force RTL</span>
+                    <div class="rtl-info-icon" style="color: var(--color-token-foreground); opacity: 0.5; cursor: pointer; margin-left: 2px;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 -960 960 960" fill="currentColor"><path d="M450-290h60V-520H450v230Zm52.92-307.75q9.38-9.29 9.38-23.02t-9.29-23.02T480-653.07t-23.02,9.29t-9.29,23.02t9.38,23.02T480-588.46t22.92-9.29ZM480.07-100q-78.84,0-148.2-29.92T211.18-211.13T129.93-331.76T100-479.93t29.92-148.2t81.21-120.68t120.63-81.25T479.93-860t148.2,29.92t120.68,81.21t81.25,120.63T860-480.07t-29.92,148.2T748.87-211.18T628.24-129.93T480.07-100ZM480-160q134,0 227-93t93-227T707-707T480-800T253-707T160-480t93,227t227,93Zm0-320Z"></path></svg>
+                      <div class="rtl-tooltip">Forces RTL layout on all elements, even if the text starts with English characters.</div>
+                    </div>
+                  </div>
                   <button id="rtl-force-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${forceRTL ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
                     <span id="rtl-force-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${forceRTL ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
                   </button>
@@ -296,7 +335,13 @@ widgetWrapper.innerHTML = `
                 <div class="h-px bg-token-border-default w-full"></div>
     
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                  <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Shift+2 fixes @</span>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Type @ with Shift+2</span>
+                    <div class="rtl-info-icon" style="color: var(--color-token-foreground); opacity: 0.5; cursor: pointer; margin-left: 2px;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 -960 960 960" fill="currentColor"><path d="M450-290h60V-520H450v230Zm52.92-307.75q9.38-9.29 9.38-23.02t-9.29-23.02T480-653.07t-23.02,9.29t-9.29,23.02t9.38,23.02T480-588.46t22.92-9.29ZM480.07-100q-78.84,0-148.2-29.92T211.18-211.13T129.93-331.76T100-479.93t29.92-148.2t81.21-120.68t120.63-81.25T479.93-860t148.2,29.92t120.68,81.21t81.25,120.63T860-480.07t-29.92,148.2T748.87-211.18T628.24-129.93T480.07-100ZM480-160q134,0 227-93t93-227T707-707T480-800T253-707T160-480t93,227t227,93Zm0-320Z"></path></svg>
+                      <div class="rtl-tooltip">Automatically converts '٬' to '@' when you press Shift+2 on a Persian keyboard layout.</div>
+                    </div>
+                  </div>
                   <button id="rtl-at-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${fixAtSign ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
                     <span id="rtl-at-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${fixAtSign ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
                   </button>
