@@ -76,8 +76,10 @@ if (!document.getElementById('rtl-widget-style')) {
             z-index: 999999 !important;
             white-space: normal;
             text-align: center;
-            background-color: var(--main-surface-primary, #1e1f22) !important;
-            border: 1px solid var(--border-medium, #4d4d4d) !important;
+            background-color: #202123 !important;
+            background-color: light-dark(#ffffff, #202123) !important;
+            border: 1px solid #4d4d4d !important;
+            border: 1px solid light-dark(#e5e7eb, #4d4d4d) !important;
             color: var(--color-token-foreground, #fff) !important;
             font-size: 11px;
             line-height: 1.4;
@@ -90,7 +92,8 @@ if (!document.getElementById('rtl-widget-style')) {
             transform: translateX(-50%);
             border-width: 5px;
             border-style: solid;
-            border-color: var(--border-medium, #4d4d4d) transparent transparent transparent;
+            border-color: #4d4d4d transparent transparent transparent !important;
+            border-color: light-dark(#e5e7eb, #4d4d4d) transparent transparent transparent !important;
         }
         .rtl-info-icon {
             position: relative;
