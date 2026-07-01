@@ -325,7 +325,7 @@ widgetWrapper.innerHTML = `
                   <input id="rtl-codefont-input" type="text" placeholder="Default: System" value="${savedCodeFont}" class="focus-visible:ring-token-focus h-7 w-full max-w-[8.5rem] rounded-lg border border-token-border bg-token-input-background px-2 text-xs text-token-text-primary shadow-sm outline-none focus-visible:ring-2 max-sm:max-w-none" spellcheck="false">
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; height: 28px;">
                   <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Line Height</span>
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <input id="rtl-lh-input" type="range" min="1.2" max="2.5" step="0.1" value="${savedLH}" style="width: 80px; cursor: pointer; accent-color: var(--color-token-charts-blue, #339cff);">
