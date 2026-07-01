@@ -47,15 +47,7 @@ if (!document.getElementById('rtl-widget-style')) {
             position: absolute;
             bottom: 0;
             right: 0;
-            display: flex;
-            flex-direction: column;
-            padding: 1px;
-            border-radius: 16px;
-            width: 240px;
-            background: var(--main-surface-primary, #202123);
-            border: 1px solid var(--border-medium, #4d4d4d);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-            color: var(--text-primary, #fff);
+            width: 270px;
             transform: scale(0);
             transform-origin: bottom right;
             opacity: 0;
@@ -236,62 +228,63 @@ widgetWrapper.innerHTML = `
       </div>
       
       <div class="rtl-widget-panel">
-        <div class="flex flex-col gap-2 p-3 w-full h-full" style="display: flex; flex-direction: column; gap: 8px;">
-        
-        <div style="text-align: center !important; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 4px;">
-            <span class="text-sm font-semibold" style="font-size: 14px; font-weight: 600;">Codex Smart RTL</span>
-        </div>
-        
-        <div class="flex items-center justify-between gap-4 px-1" style="display: flex; justify-content: space-between; align-items: center;">
-          <span id="rtl-toggle-label" class="font-medium text-xs opacity-80" style="font-size: 12px;">${isRTL ? 'Enabled' : 'Disabled'}</span>
-          <button id="rtl-toggle-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${isRTL ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
-            <span id="rtl-toggle-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${isRTL ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
-          </button>
-        </div>
-        
-        <div id="rtl-settings-wrapper" class="flex flex-col gap-2 transition-all duration-300" style="opacity: ${isRTL ? '1' : '0.4'}; pointer-events: ${isRTL ? 'auto' : 'none'}; display: flex; flex-direction: column; gap: 8px; transition: opacity 0.3s;">
-            <div class="flex items-center justify-between gap-2 px-1 mt-1" style="display: flex; justify-content: space-between; align-items: center;">
-              <span class="font-medium text-xs opacity-80" style="font-size: 12px;">Force RTL</span>
-              <button id="rtl-force-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${forceRTL ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
-                <span id="rtl-force-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${forceRTL ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
+        <div class="relative flex max-h-full min-h-0 flex-col overflow-hidden rounded-3xl bg-token-dropdown-background pt-3 border border-token-border-default shadow-md">
+          <div class="flex flex-col gap-2 p-3 w-full h-full pb-3" style="display: flex; flex-direction: column; gap: 8px;">
+          
+            <div class="border-b border-token-border-default pb-2 mb-1 text-center" style="text-align: center !important;">
+                <span class="text-sm font-semibold text-token-text-primary" style="font-size: 14px; font-weight: 600;">Codex Smart RTL</span>
+            </div>
+            
+            <div class="flex items-center justify-between gap-4 px-1" style="display: flex; justify-content: space-between; align-items: center;">
+              <span id="rtl-toggle-label" class="font-medium text-xs text-token-text-secondary" style="font-size: 12px;">${isRTL ? 'Enabled' : 'Disabled'}</span>
+              <button id="rtl-toggle-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${isRTL ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
+                <span id="rtl-toggle-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${isRTL ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
               </button>
             </div>
             
-            <div style="height: 1px; background: rgba(255,255,255,0.1); width: 100%;"></div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-              <span class="font-medium text-xs opacity-80" style="font-size: 12px;">FA/AR Font</span>
-              <input id="rtl-fafont-input" type="text" placeholder="Default: Vazirmatn" value="${savedFaFont}" style="font-size: 11px; background: var(--input-background, #3e3f4b); border: 1px solid var(--border-medium, #4d4d4d); color: #fff; padding: 4px 8px; border-radius: 4px; width: 110px; border: 1px solid #555; outline: none;">
+            <div id="rtl-settings-wrapper" class="flex flex-col gap-2 transition-all duration-300" style="opacity: ${isRTL ? '1' : '0.4'}; pointer-events: ${isRTL ? 'auto' : 'none'}; display: flex; flex-direction: column; gap: 8px; transition: opacity 0.3s;">
+                <div class="flex items-center justify-between gap-2 px-1 mt-1" style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="font-medium text-xs text-token-text-secondary" style="font-size: 12px;">Force RTL</span>
+                  <button id="rtl-force-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${forceRTL ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
+                    <span id="rtl-force-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${forceRTL ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
+                  </button>
+                </div>
+                
+                <div class="h-px bg-token-border-default w-full"></div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                  <span class="font-medium text-xs text-token-text-secondary" style="font-size: 12px;">FA/AR Font</span>
+                  <input id="rtl-fafont-input" type="text" placeholder="Default: Vazirmatn" value="${savedFaFont}" class="focus-visible:ring-token-focus h-7 w-full max-w-[8.5rem] rounded-lg border border-token-border bg-token-input-background px-2 text-xs text-token-text-primary shadow-sm outline-none focus-visible:ring-2 max-sm:max-w-none" spellcheck="false">
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                  <span class="font-medium text-xs text-token-text-secondary" style="font-size: 12px;">EN Font</span>
+                  <input id="rtl-enfont-input" type="text" placeholder="Default: System" value="${savedEnFont}" class="focus-visible:ring-token-focus h-7 w-full max-w-[8.5rem] rounded-lg border border-token-border bg-token-input-background px-2 text-xs text-token-text-primary shadow-sm outline-none focus-visible:ring-2 max-sm:max-w-none" spellcheck="false">
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                  <span class="font-medium text-xs text-token-text-secondary" style="font-size: 12px;">Code Font</span>
+                  <input id="rtl-codefont-input" type="text" placeholder="Default: System" value="${savedCodeFont}" class="focus-visible:ring-token-focus h-7 w-full max-w-[8.5rem] rounded-lg border border-token-border bg-token-input-background px-2 text-xs text-token-text-primary shadow-sm outline-none focus-visible:ring-2 max-sm:max-w-none" spellcheck="false">
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                  <span class="font-medium text-xs text-token-text-secondary" style="font-size: 12px;">Line Height</span>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input id="rtl-lh-input" type="range" min="1.2" max="2.5" step="0.1" value="${savedLH}" style="width: 80px; cursor: pointer;">
+                    <button id="rtl-lh-reset" type="button" class="text-token-text-primary opacity-50 hover:opacity-100 transition-opacity cursor-pointer text-sm" style="background: none; border: none; padding: 0;">↺</button>
+                  </div>
+                </div>
+                
+                <div class="h-px bg-token-border-default w-full"></div>
+    
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                  <span class="font-medium text-xs text-token-text-secondary" style="font-size: 12px;">Shift+2 fixes @</span>
+                  <button id="rtl-at-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${fixAtSign ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
+                    <span id="rtl-at-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${fixAtSign ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
+                  </button>
+                </div>
             </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-              <span class="font-medium text-xs opacity-80" style="font-size: 12px;">EN Font</span>
-              <input id="rtl-enfont-input" type="text" placeholder="Default: System" value="${savedEnFont}" style="font-size: 11px; background: var(--input-background, #3e3f4b); border: 1px solid var(--border-medium, #4d4d4d); color: #fff; padding: 4px 8px; border-radius: 4px; width: 110px; border: 1px solid #555; outline: none;">
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-              <span class="font-medium text-xs opacity-80" style="font-size: 12px;">Code Font</span>
-              <input id="rtl-codefont-input" type="text" placeholder="Default: System" value="${savedCodeFont}" style="font-size: 11px; background: var(--input-background, #3e3f4b); border: 1px solid var(--border-medium, #4d4d4d); color: #fff; padding: 4px 8px; border-radius: 4px; width: 110px; border: 1px solid #555; outline: none;">
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-              <span class="font-medium text-xs opacity-80" style="font-size: 12px;">Line Height</span>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <input id="rtl-lh-input" type="range" min="1.2" max="2.5" step="0.1" value="${savedLH}" style="width: 80px; cursor: pointer;">
-                <button id="rtl-lh-reset" type="button" style="background: none; border: none; color: #fff; opacity: 0.5; cursor: pointer; font-size: 14px;">↺</button>
-              </div>
-            </div>
-            
-            <div style="height: 1px; background: rgba(255,255,255,0.1); width: 100%;"></div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-              <span class="font-medium text-xs opacity-80" style="font-size: 12px;">Shift+2 fixes @</span>
-              <button id="rtl-at-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${fixAtSign ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
-                <span id="rtl-at-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${fixAtSign ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
-              </button>
-            </div>
-        </div>
-        
+          </div>
         </div>
       </div>
 `;
