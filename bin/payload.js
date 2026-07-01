@@ -19,7 +19,7 @@ if (!document.getElementById('rtl-widget-style')) {
             right: 16px;
             z-index: 99999;
             direction: ltr;
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: inherit;
         }
         .rtl-widget-trigger {
             width: 40px;
@@ -154,6 +154,13 @@ const updateDynamicCSS = () => {
         p, h1, h2, h3, h4, h5, h6, li, span, div, [role="presentation"] {
             unicode-bidi: plaintext !important;
             text-align: start !important;
+        }
+        
+        /* Explicitly keep our widget panel LTR and left-aligned */
+        .rtl-widget-container, .rtl-widget-container * {
+            direction: ltr !important;
+            text-align: left !important;
+            unicode-bidi: isolate !important;
         }
         
         /* Force RTL rules if enabled */
