@@ -11,6 +11,7 @@ This CLI tool automatically injects a sophisticated RTL engine into Codex, addin
 - **Persian Keyboard Fix**: Maps `Shift + 2` to type `@` instead of `٬` on Persian keyboards.
 - **Beautiful Settings Panel**: A floating, non-intrusive UI widget at the bottom right corner.
 - **Vazirmatn Built-in**: Comes with the beautiful Vazirmatn variable font by default.
+- **Theme Compatibility**: Seamlessly adapts colors based on Codex's active theme, using native color variables.
 
 ## Installation
 
@@ -74,6 +75,7 @@ Feel free to open issues or submit pull requests. Let's make Codex accessible an
 - **حل مشکل کیبورد فارسی**: این ابزار کلید ترکیبی `Shift + 2` روی کیبورد فارسی را اصلاح می‌کند تا به جای «٬» علامت `@` تایپ شود.
 - **پنل تنظیمات زیبا**: تمام این تنظیمات در یک ویجتِ کوچک، مدرن و شناور در پایینِ صفحه قرار گرفته‌اند.
 - **فونت وزیرمتن**: فونت زیبای Vazirmatn Variable به صورت پیش‌فرض در این افزونه گنجانده شده است.
+- **همگام‌سازی خودکار با تم (Theme Compatibility)**: هماهنگی و تغییر پویای رنگ سوییچ‌های پنل با تغییر تم رنگی Codex به صورت کاملاً بومی.
 
 ## آموزش نصب
 

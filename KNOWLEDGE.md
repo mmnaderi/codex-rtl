@@ -93,3 +93,7 @@ These are references to the native UI elements, tokens, and layouts used inside 
   </div>
 </div>
 ```
+
+## Roadmap & Future Tasks
+
+- [ ] **Verify Theme Sync Completeness**: Investigate other dimensions of Codex theme synchronization (e.g., text box border colors, focus states, background elements in light/dark transitions) to ensure all facets of the widget panel scale dynamically with any changes in the main application.
