@@ -3,6 +3,11 @@ const rtlConfig = __RTL_CONFIG__;
 
 let isRTL = rtlConfig.isRTL !== false;
 let forceRTL = rtlConfig.forceRTL === true;
+let fixAtSign = rtlConfig.fixAtSign !== false;
+let savedFaFont = rtlConfig.faFont || '';
+let savedEnFont = rtlConfig.enFont || '';
+let savedCodeFont = rtlConfig.codeFont || '';
+let savedLH = rtlConfig.lh || '1.6';
 
 if (!document.getElementById('rtl-widget-style')) {
     let widgetStyle = document.createElement('style');
@@ -85,14 +90,45 @@ const updateDynamicCSS = () => {
         return;
     }
     
+    let faFontRule = '';
+    let faFontName = "'PersianOnlyFont'";
+    
+    if (savedFaFont) {
+        faFontName = "'UserPersianFont', 'PersianOnlyFont'";
+        let baseFaFont = savedFaFont.replace(/[-\s]?Regular$/i, '');
+        faFontRule = `
+            @font-face {
+                font-family: 'UserPersianFont';
+                src: local('${savedFaFont}'), local('${baseFaFont}');
+                font-weight: 400;
+                unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+            }
+            @font-face {
+                font-family: 'UserPersianFont';
+                src: local('${baseFaFont} Bold'), local('${baseFaFont}-Bold'), local('${baseFaFont}Bold');
+                font-weight: 700;
+                unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+            }
+        `;
+    }
+    
+    let enFontStr = savedEnFont ? `'${savedEnFont}', ui-sans-serif, system-ui, sans-serif` : 'ui-sans-serif, system-ui, sans-serif';
+    let codeFontStr = savedCodeFont ? `'${savedCodeFont}', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace` : 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+    
     let forceRtlStyle = forceRTL ? `
-        /* Override smart plaintext RTL and force RTL layout for chat content */
-        .prose p, .prose li, .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6,
-        [data-testid="chat-message"] p, [data-testid="chat-message"] li,
-        [data-testid="chat-message"] h1, [data-testid="chat-message"] h2, [data-testid="chat-message"] h3,
-        [data-testid="chat-message"] .leading-relaxed, .leading-relaxed,
-        [data-testid="user-input-step"] p, [data-testid="user-input-step"] li,
-        .markdown p, .markdown li, .markdown h1, .markdown h2, .markdown h3 {
+        /* Force RTL layout for all text components excluding the widget panel */
+        p:not(.rtl-widget-container *), 
+        li:not(.rtl-widget-container *), 
+        h1:not(.rtl-widget-container *), 
+        h2:not(.rtl-widget-container *), 
+        h3:not(.rtl-widget-container *), 
+        h4:not(.rtl-widget-container *), 
+        h5:not(.rtl-widget-container *), 
+        h6:not(.rtl-widget-container *),
+        textarea:not(.rtl-widget-container *), 
+        [contenteditable="true"]:not(.rtl-widget-container *), 
+        [contenteditable="true"] p:not(.rtl-widget-container *),
+        [data-lexical-text="true"]:not(.rtl-widget-container *) {
             direction: rtl !important;
             text-align: right !important;
             unicode-bidi: isolate !important;
@@ -100,6 +136,7 @@ const updateDynamicCSS = () => {
     ` : '';
     
     rtlStyle.textContent = `
+        ${faFontRule}
         @font-face {
             font-family: 'PersianOnlyFont';
             src: url('data:font/woff2;base64,${fontBase64}') format('woff2');
@@ -107,7 +144,7 @@ const updateDynamicCSS = () => {
             unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
         }
         :root, :host, html, body {
-            font-family: 'PersianOnlyFont', ui-sans-serif, system-ui, -apple-system, sans-serif !important;
+            font-family: ${faFontName}, ${enFontStr}, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
         }
         
         /* Smart RTL using CSS unicode-bidi plaintext */
@@ -116,18 +153,23 @@ const updateDynamicCSS = () => {
             text-align: start !important;
         }
         
-        /* Force RTL rules if enabled (has higher specificity) */
+        /* Force RTL rules if enabled */
         ${forceRtlStyle}
         
         /* Ensure code blocks are kept LTR */
-        pre, code, pre *, code * {
+        pre:not(.rtl-widget-container *), code:not(.rtl-widget-container *), 
+        pre:not(.rtl-widget-container *) *, code:not(.rtl-widget-container *) * {
             unicode-bidi: isolate !important;
             direction: ltr !important;
             text-align: left !important;
+            font-family: ${codeFontStr} !important;
         }
         
         /* Text input fields and lexical text editors */
-        textarea, [contenteditable="true"], [contenteditable="true"] p, [data-lexical-text="true"] {
+        textarea:not(.rtl-widget-container *), 
+        [contenteditable="true"]:not(.rtl-widget-container *), 
+        [contenteditable="true"] p:not(.rtl-widget-container *), 
+        [data-lexical-text="true"]:not(.rtl-widget-container *) {
             unicode-bidi: plaintext !important;
             text-align: start !important;
         }
@@ -138,6 +180,17 @@ const updateDynamicCSS = () => {
             padding-left: 0 !important;
             padding-right: 1.25rem !important;
         }
+        
+        /* Custom Line Height */
+        p:not(.rtl-widget-container *), 
+        li:not(.rtl-widget-container *), 
+        h1:not(.rtl-widget-container *), 
+        h2:not(.rtl-widget-container *), 
+        h3:not(.rtl-widget-container *), 
+        [contenteditable="true"] p:not(.rtl-widget-container *),
+        [data-lexical-text="true"]:not(.rtl-widget-container *) {
+            line-height: ${savedLH} !important;
+        }
     `;
     
     if (!rtlStyle.parentNode) {
@@ -147,6 +200,17 @@ const updateDynamicCSS = () => {
 
 // Initial apply
 updateDynamicCSS();
+
+// Global Shift+2 keyboard handler for @
+document.addEventListener('keydown', (e) => {
+    if (!fixAtSign) return;
+    if (e.code === 'Digit2' && e.shiftKey) {
+        if (e.key === '٬' || e.key === '،') {
+            e.preventDefault();
+            document.execCommand('insertText', false, '@');
+        }
+    }
+}, { capture: true });
 
 // Floating widget for Codex RTL
 const widgetWrapper = document.createElement('div');
@@ -182,24 +246,24 @@ widgetWrapper.innerHTML = `
             
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
               <span class="font-medium text-xs opacity-80" style="font-size: 12px;">FA/AR Font</span>
-              <input id="rtl-fafont-input" type="text" placeholder="Default: Vazirmatn" disabled value="" style="font-size: 11px; background: var(--input-background, #3e3f4b); border: 1px solid var(--border-medium, #4d4d4d); color: #fff; padding: 4px 8px; border-radius: 4px; width: 110px; opacity: 0.5;">
+              <input id="rtl-fafont-input" type="text" placeholder="Default: Vazirmatn" value="${savedFaFont}" style="font-size: 11px; background: var(--input-background, #3e3f4b); border: 1px solid var(--border-medium, #4d4d4d); color: #fff; padding: 4px 8px; border-radius: 4px; width: 110px; border: 1px solid #555; outline: none;">
             </div>
             
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
               <span class="font-medium text-xs opacity-80" style="font-size: 12px;">EN Font</span>
-              <input id="rtl-enfont-input" type="text" placeholder="Default: System" disabled value="" style="font-size: 11px; background: var(--input-background, #3e3f4b); border: 1px solid var(--border-medium, #4d4d4d); color: #fff; padding: 4px 8px; border-radius: 4px; width: 110px; opacity: 0.5;">
+              <input id="rtl-enfont-input" type="text" placeholder="Default: System" value="${savedEnFont}" style="font-size: 11px; background: var(--input-background, #3e3f4b); border: 1px solid var(--border-medium, #4d4d4d); color: #fff; padding: 4px 8px; border-radius: 4px; width: 110px; border: 1px solid #555; outline: none;">
             </div>
             
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
               <span class="font-medium text-xs opacity-80" style="font-size: 12px;">Code Font</span>
-              <input id="rtl-codefont-input" type="text" placeholder="Default: System" disabled value="" style="font-size: 11px; background: var(--input-background, #3e3f4b); border: 1px solid var(--border-medium, #4d4d4d); color: #fff; padding: 4px 8px; border-radius: 4px; width: 110px; opacity: 0.5;">
+              <input id="rtl-codefont-input" type="text" placeholder="Default: System" value="${savedCodeFont}" style="font-size: 11px; background: var(--input-background, #3e3f4b); border: 1px solid var(--border-medium, #4d4d4d); color: #fff; padding: 4px 8px; border-radius: 4px; width: 110px; border: 1px solid #555; outline: none;">
             </div>
             
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
               <span class="font-medium text-xs opacity-80" style="font-size: 12px;">Line Height</span>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <input id="rtl-lh-input" type="range" min="1.2" max="2.5" step="0.1" disabled value="1.6" style="width: 80px; cursor: pointer; opacity: 0.5;">
-                <button id="rtl-lh-reset" type="button" disabled style="background: none; border: none; color: #fff; opacity: 0.2; cursor: pointer;">↺</button>
+                <input id="rtl-lh-input" type="range" min="1.2" max="2.5" step="0.1" value="${savedLH}" style="width: 80px; cursor: pointer;">
+                <button id="rtl-lh-reset" type="button" style="background: none; border: none; color: #fff; opacity: 0.5; cursor: pointer; font-size: 14px;">↺</button>
               </div>
             </div>
             
@@ -207,8 +271,8 @@ widgetWrapper.innerHTML = `
 
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
               <span class="font-medium text-xs opacity-80" style="font-size: 12px;">Shift+2 fixes @</span>
-              <button id="rtl-at-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: var(--button-primary, #10a37f); border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
-                <span id="rtl-at-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: translateX(20px); transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
+              <button id="rtl-at-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${fixAtSign ? 'var(--button-primary, #10a37f)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
+                <span id="rtl-at-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${fixAtSign ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
               </button>
             </div>
         </div>
@@ -224,11 +288,23 @@ const toggleLabel = document.getElementById('rtl-toggle-label');
 const settingsWrapper = document.getElementById('rtl-settings-wrapper');
 const forceBtn = document.getElementById('rtl-force-btn');
 const forceKnob = document.getElementById('rtl-force-knob');
+const atBtn = document.getElementById('rtl-at-btn');
+const atKnob = document.getElementById('rtl-at-knob');
+const faFontInput = document.getElementById('rtl-fafont-input');
+const enFontInput = document.getElementById('rtl-enfont-input');
+const codeFontInput = document.getElementById('rtl-codefont-input');
+const lhInput = document.getElementById('rtl-lh-input');
+const lhResetBtn = document.getElementById('rtl-lh-reset');
 
 const saveConfig = () => {
     console.log("SAVE_RTL_CONFIG|" + JSON.stringify({
         isRTL: isRTL,
-        forceRTL: forceRTL
+        forceRTL: forceRTL,
+        fixAtSign: fixAtSign,
+        faFont: faFontInput.value.trim(),
+        enFont: enFontInput.value.trim(),
+        codeFont: codeFontInput.value.trim(),
+        lh: lhInput.value
     }));
 };
 
@@ -248,5 +324,43 @@ forceBtn.addEventListener('click', () => {
     saveConfig();
     forceKnob.style.transform = forceRTL ? 'translateX(20px)' : 'translateX(0)';
     forceBtn.style.backgroundColor = forceRTL ? 'var(--button-primary, #10a37f)' : '#555';
+    updateDynamicCSS();
+});
+
+atBtn.addEventListener('click', () => {
+    fixAtSign = !fixAtSign;
+    saveConfig();
+    atKnob.style.transform = fixAtSign ? 'translateX(20px)' : 'translateX(0)';
+    atBtn.style.backgroundColor = fixAtSign ? 'var(--button-primary, #10a37f)' : '#555';
+});
+
+faFontInput.addEventListener('input', () => {
+    savedFaFont = faFontInput.value.trim();
+    saveConfig();
+    updateDynamicCSS();
+});
+
+enFontInput.addEventListener('input', () => {
+    savedEnFont = enFontInput.value.trim();
+    saveConfig();
+    updateDynamicCSS();
+});
+
+codeFontInput.addEventListener('input', () => {
+    savedCodeFont = codeFontInput.value.trim();
+    saveConfig();
+    updateDynamicCSS();
+});
+
+lhInput.addEventListener('input', () => {
+    savedLH = lhInput.value;
+    saveConfig();
+    updateDynamicCSS();
+});
+
+lhResetBtn.addEventListener('click', () => {
+    lhInput.value = '1.6';
+    savedLH = '1.6';
+    saveConfig();
     updateDynamicCSS();
 });
