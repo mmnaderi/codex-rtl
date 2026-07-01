@@ -101,6 +101,11 @@ if (!document.getElementById('rtl-widget-style')) {
             align-items: center;
             justify-content: center;
             z-index: 50;
+            opacity: 0.5;
+            transition: opacity 0.15s ease-in-out;
+        }
+        .rtl-info-icon:hover {
+            opacity: 1;
         }
         .rtl-info-icon:hover .rtl-tooltip {
             visibility: visible;
@@ -301,7 +306,7 @@ widgetWrapper.innerHTML = `
                 <div class="flex items-center justify-between gap-2 px-1 mt-1" style="display: flex; justify-content: space-between; align-items: center;">
                   <div style="display: flex; align-items: center; gap: 4px;">
                     <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Force RTL</span>
-                    <div class="rtl-info-icon" style="color: var(--color-token-foreground); opacity: 0.5; cursor: pointer; margin-left: 2px;">
+                    <div class="rtl-info-icon" style="color: var(--color-token-foreground); cursor: pointer; margin-left: 2px;">
                       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 -960 960 960" fill="currentColor"><path d="M450-290h60V-520H450v230Zm52.92-307.75q9.38-9.29 9.38-23.02t-9.29-23.02T480-653.07t-23.02,9.29t-9.29,23.02t9.38,23.02T480-588.46t22.92-9.29ZM480.07-100q-78.84,0-148.2-29.92T211.18-211.13T129.93-331.76T100-479.93t29.92-148.2t81.21-120.68t120.63-81.25T479.93-860t148.2,29.92t120.68,81.21t81.25,120.63T860-480.07t-29.92,148.2T748.87-211.18T628.24-129.93T480.07-100ZM480-160q134,0 227-93t93-227T707-707T480-800T253-707T160-480t93,227t227,93Zm0-320Z"></path></svg>
                       <div class="rtl-tooltip">Forces RTL layout on all elements, even if the text starts with English characters.</div>
                     </div>
@@ -341,7 +346,7 @@ widgetWrapper.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                   <div style="display: flex; align-items: center; gap: 4px;">
                     <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Type @ with Shift+2</span>
-                    <div class="rtl-info-icon" style="color: var(--color-token-foreground); opacity: 0.5; cursor: pointer; margin-left: 2px;">
+                    <div class="rtl-info-icon" style="color: var(--color-token-foreground); cursor: pointer; margin-left: 2px;">
                       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 -960 960 960" fill="currentColor"><path d="M450-290h60V-520H450v230Zm52.92-307.75q9.38-9.29 9.38-23.02t-9.29-23.02T480-653.07t-23.02,9.29t-9.29,23.02t9.38,23.02T480-588.46t22.92-9.29ZM480.07-100q-78.84,0-148.2-29.92T211.18-211.13T129.93-331.76T100-479.93t29.92-148.2t81.21-120.68t120.63-81.25T479.93-860t148.2,29.92t120.68,81.21t81.25,120.63T860-480.07t-29.92,148.2T748.87-211.18T628.24-129.93T480.07-100ZM480-160q134,0 227-93t93-227T707-707T480-800T253-707T160-480t93,227t227,93Zm0-320Z"></path></svg>
                       <div class="rtl-tooltip">Automatically converts '٬' to '@' when you press Shift+2 on a Persian keyboard layout.</div>
                     </div>
