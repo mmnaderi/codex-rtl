@@ -292,7 +292,7 @@ widgetWrapper.innerHTML = `
           <div class="flex flex-col gap-2 px-3 pb-3 pt-0 w-full h-full" style="display: flex; flex-direction: column; gap: 8px;">
           
             <div class="border-b border-token-border-default pb-2 mb-1 text-center" style="text-align: center !important;">
-                <span class="text-sm font-semibold text-token-text-primary" style="font-size: 14px; font-weight: 600;">Codex Smart RTL</span>
+                <div class="electron:heading-lg heading-base truncate" style="color: var(--color-token-foreground);">Codex Smart RTL</div>
             </div>
             
             <div class="flex items-center justify-between gap-4 px-1" style="display: flex; justify-content: space-between; align-items: center;">
