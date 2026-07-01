@@ -244,7 +244,7 @@ widgetWrapper.innerHTML = `
         
         <div class="flex items-center justify-between gap-4 px-1" style="display: flex; justify-content: space-between; align-items: center;">
           <span id="rtl-toggle-label" class="font-medium text-xs opacity-80" style="font-size: 12px;">${isRTL ? 'Enabled' : 'Disabled'}</span>
-          <button id="rtl-toggle-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${isRTL ? 'var(--token-charts-blue, #2563eb)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
+          <button id="rtl-toggle-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${isRTL ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
             <span id="rtl-toggle-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${isRTL ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
           </button>
         </div>
@@ -252,7 +252,7 @@ widgetWrapper.innerHTML = `
         <div id="rtl-settings-wrapper" class="flex flex-col gap-2 transition-all duration-300" style="opacity: ${isRTL ? '1' : '0.4'}; pointer-events: ${isRTL ? 'auto' : 'none'}; display: flex; flex-direction: column; gap: 8px; transition: opacity 0.3s;">
             <div class="flex items-center justify-between gap-2 px-1 mt-1" style="display: flex; justify-content: space-between; align-items: center;">
               <span class="font-medium text-xs opacity-80" style="font-size: 12px;">Force RTL</span>
-              <button id="rtl-force-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${forceRTL ? 'var(--token-charts-blue, #2563eb)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
+              <button id="rtl-force-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${forceRTL ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
                 <span id="rtl-force-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${forceRTL ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
               </button>
             </div>
@@ -286,7 +286,7 @@ widgetWrapper.innerHTML = `
 
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
               <span class="font-medium text-xs opacity-80" style="font-size: 12px;">Shift+2 fixes @</span>
-              <button id="rtl-at-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${fixAtSign ? 'var(--token-charts-blue, #2563eb)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
+              <button id="rtl-at-btn" type="button" class="relative inline-flex items-center rounded-full transition-colors duration-200 h-6 w-11" style="background-color: ${fixAtSign ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
                 <span id="rtl-at-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${fixAtSign ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
               </button>
             </div>
@@ -330,7 +330,7 @@ toggleBtn.addEventListener('click', () => {
     settingsWrapper.style.opacity = isRTL ? '1' : '0.4';
     settingsWrapper.style.pointerEvents = isRTL ? 'auto' : 'none';
     toggleKnob.style.transform = isRTL ? 'translateX(20px)' : 'translateX(0)';
-    toggleBtn.style.backgroundColor = isRTL ? 'var(--token-charts-blue, #2563eb)' : '#555';
+    toggleBtn.style.backgroundColor = isRTL ? 'var(--color-token-charts-blue, #339cff)' : '#555';
     updateDynamicCSS();
 });
 
@@ -338,7 +338,7 @@ forceBtn.addEventListener('click', () => {
     forceRTL = !forceRTL;
     saveConfig();
     forceKnob.style.transform = forceRTL ? 'translateX(20px)' : 'translateX(0)';
-    forceBtn.style.backgroundColor = forceRTL ? 'var(--token-charts-blue, #2563eb)' : '#555';
+    forceBtn.style.backgroundColor = forceRTL ? 'var(--color-token-charts-blue, #339cff)' : '#555';
     updateDynamicCSS();
 });
 
@@ -346,7 +346,7 @@ atBtn.addEventListener('click', () => {
     fixAtSign = !fixAtSign;
     saveConfig();
     atKnob.style.transform = fixAtSign ? 'translateX(20px)' : 'translateX(0)';
-    atBtn.style.backgroundColor = fixAtSign ? 'var(--token-charts-blue, #2563eb)' : '#555';
+    atBtn.style.backgroundColor = fixAtSign ? 'var(--color-token-charts-blue, #339cff)' : '#555';
 });
 
 faFontInput.addEventListener('input', () => {
