@@ -143,8 +143,11 @@ const updateDynamicCSS = () => {
             font-weight: 100 900;
             unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
         }
+        
         :root, :host, html, body {
             font-family: ${faFontName}, ${enFontStr}, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+            --diffs-font-family: ${codeFontStr} !important;
+            --diffs-font-fallback: ${codeFontStr} !important;
         }
         
         /* Smart RTL using CSS unicode-bidi plaintext */
@@ -156,9 +159,14 @@ const updateDynamicCSS = () => {
         /* Force RTL rules if enabled */
         ${forceRtlStyle}
         
-        /* Ensure code blocks are kept LTR */
-        pre:not(.rtl-widget-container *), code:not(.rtl-widget-container *), 
-        pre:not(.rtl-widget-container *) *, code:not(.rtl-widget-container *) * {
+        /* Ensure code blocks are kept LTR and get the code font applied */
+        pre:not(.rtl-widget-container *), 
+        code:not(.rtl-widget-container *), 
+        pre:not(.rtl-widget-container *) *, 
+        code:not(.rtl-widget-container *) *,
+        pre:not(.rtl-widget-container *) span,
+        code:not(.rtl-widget-container *) span,
+        [data-line] span {
             unicode-bidi: isolate !important;
             direction: ltr !important;
             text-align: left !important;
