@@ -73,12 +73,12 @@ if (!document.getElementById('rtl-widget-style')) {
             padding: 8px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            z-index: 99999;
+            z-index: 999999 !important;
             white-space: normal;
             text-align: center;
-            background: var(--token-dropdown-background, #202123);
-            border: 1px solid var(--border-medium, #4d4d4d);
-            color: var(--color-token-foreground, #fff);
+            background-color: var(--main-surface-primary, #1e1f22) !important;
+            border: 1px solid var(--border-medium, #4d4d4d) !important;
+            color: var(--color-token-foreground, #fff) !important;
             font-size: 11px;
             line-height: 1.4;
         }
@@ -97,6 +97,7 @@ if (!document.getElementById('rtl-widget-style')) {
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            z-index: 50;
         }
         .rtl-info-icon:hover .rtl-tooltip {
             visibility: visible;
@@ -279,7 +280,7 @@ widgetWrapper.innerHTML = `
       </div>
       
       <div class="rtl-widget-panel">
-        <div class="relative flex max-h-full min-h-0 flex-col overflow-hidden rounded-3xl bg-token-dropdown-background pt-3 border border-token-border-default shadow-md">
+        <div class="relative flex max-h-full min-h-0 flex-col rounded-3xl bg-token-dropdown-background pt-3 border border-token-border-default shadow-md">
           <div class="flex flex-col gap-2 px-3 pb-3 pt-0 w-full h-full" style="display: flex; flex-direction: column; gap: 8px;">
           
             <div class="border-b border-token-border-default pb-2 mb-1 text-center" style="text-align: center !important;">
@@ -293,7 +294,7 @@ widgetWrapper.innerHTML = `
               </button>
             </div>
             
-            <div id="rtl-settings-wrapper" class="flex flex-col gap-2 transition-all duration-300" style="opacity: ${isRTL ? '1' : '0.4'}; pointer-events: ${isRTL ? 'auto' : 'none'}; display: flex; flex-direction: column; gap: 8px; transition: opacity 0.3s;">
+            <div id="rtl-settings-wrapper" class="flex flex-col gap-2 transition-all duration-300" style="position: relative; z-index: 10; opacity: ${isRTL ? '1' : '0.4'}; pointer-events: ${isRTL ? 'auto' : 'none'}; display: flex; flex-direction: column; gap: 8px; transition: opacity 0.3s;">
                 <div class="flex items-center justify-between gap-2 px-1 mt-1" style="display: flex; justify-content: space-between; align-items: center;">
                   <div style="display: flex; align-items: center; gap: 4px;">
                     <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Force RTL</span>
