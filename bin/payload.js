@@ -69,6 +69,24 @@ if (!document.getElementById('rtl-widget-style')) {
             visibility: visible;
             opacity: 1;
         }
+        .rtl-github-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.7;
+            text-decoration: none;
+            padding-top: 4px;
+            padding-bottom: 2px;
+            transition: all 0.3s ease-in-out;
+            color: var(--color-token-foreground, #fff) !important;
+        }
+        .rtl-github-link:hover {
+            opacity: 1;
+            color: #ffd700 !important; /* Gold color */
+        }
     `;
     document.head.appendChild(widgetStyle);
 }
@@ -283,6 +301,14 @@ widgetWrapper.innerHTML = `
                     <span id="rtl-at-knob" class="inline-block transform rounded-full bg-white transition-transform h-4 w-4" style="margin-left: 4px; transform: ${fixAtSign ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
                   </button>
                 </div>
+                
+                <div class="h-px bg-token-border-default w-full"></div>
+                
+                <!-- GitHub -->
+                <a href="https://github.com/mmnaderi/codex-rtl" target="_blank" class="rtl-github-link">
+                  <svg height="14" width="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg>
+                  Star on GitHub
+                </a>
             </div>
           </div>
         </div>
