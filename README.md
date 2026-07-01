@@ -17,12 +17,19 @@ This CLI tool automatically injects a sophisticated RTL engine into Codex, addin
 
 You don't need to download any files. Just run the following command in your terminal:
 
-### macOS / Linux
-Because the tool needs to modify the Codex application files, you must run it with `sudo`:
+### macOS
+Simply run:
+```bash
+npx codex-rtl
+```
+> **First time?** If you get a "Permission Denied" error, the tool will **automatically open** the App Management settings page for you. Just enable the toggle for your terminal app, then run the command again. No `sudo` needed!
+>
+> You can also grant permission manually: `System Settings > Privacy & Security > App Management`.
+
+### Linux
 ```bash
 sudo npx codex-rtl
 ```
-> **macOS Users:** If you get a "Permission Denied" error even with sudo, ensure your terminal (e.g. Terminal, iTerm2, VS Code) has **App Management** permissions enabled in `System Settings > Privacy & Security > App Management`.
 
 ### Windows
 Open **PowerShell** or **Command Prompt** as **Administrator** (Right-click -> Run as Administrator), then run:
@@ -40,9 +47,9 @@ npx codex-rtl
 If you ever want to revert Codex back to its original state (before the patch), simply run the command with the `--restore` flag:
 
 ```bash
-sudo npx codex-rtl --restore
+npx codex-rtl --restore
 ```
-*(On Windows, run without `sudo` in an Administrator terminal)*
+*(On Linux, run with `sudo`. On Windows, run in an Administrator terminal)*
 
 ## How it works
 
@@ -81,12 +88,19 @@ Feel free to open issues or submit pull requests. Let's make Codex accessible an
 
 بدون نیاز به دانلود هیچ فایلی، فقط کافیست دستور زیر را در ترمینال سیستم خود اجرا کنید:
 
-### در مک (macOS) و لینوکس
-از آنجایی که این ابزار قرار است فایل‌های سیستمی Codex را ویرایش کند، باید حتماً دسترسی `sudo` داشته باشد:
+### در مک (macOS)
+کافیست دستور زیر را اجرا کنید:
+```bash
+npx codex-rtl
+```
+> **اولین بار؟** اگر خطای Permission Denied دریافت کردید، ابزار به صورت **خودکار** صفحهٔ تنظیمات App Management را برای شما باز می‌کند. فقط سوئیچ ترمینال خود (مثلاً Terminal، iTerm2 یا VS Code) را فعال کنید و دوباره دستور را اجرا کنید. نیازی به `sudo` نیست!
+>
+> همچنین می‌توانید به صورت دستی به مسیر `System Settings > Privacy & Security > App Management` بروید.
+
+### در لینوکس
 ```bash
 sudo npx codex-rtl
 ```
-> **کاربران مک (macOS):** اگر با وجود استفاده از sudo باز هم خطای Permission Denied دریافت کردید، باید به ترمینال خود (مثل Terminal، iTerm2 یا VS Code) دسترسی **App Management** بدهید. برای این کار به مسیر `System Settings > Privacy & Security > App Management` بروید و دسترسی ترمینال خود را فعال کنید.
 
 ### در ویندوز
 برنامهٔ **PowerShell** یا **Command Prompt** را در حالت **Administrator** (راست‌کلیک -> Run as Administrator) باز کنید و دستور زیر را بنویسید:
@@ -104,9 +118,9 @@ npx codex-rtl
 اگر زمانی خواستید Codex را به حالتِ اولیه (قبل از نصب این پچ) برگردانید، فقط کافیست دستور بالا را با فلگ `--restore` اجرا کنید:
 
 ```bash
-sudo npx codex-rtl --restore
+npx codex-rtl --restore
 ```
-*(کاربران ویندوز این دستور را بدون `sudo` و در یک ترمینال ادمین اجرا کنند)*
+*(در لینوکس با `sudo` اجرا کنید. کاربران ویندوز این دستور را در یک ترمینال ادمین اجرا کنند)*
 
 ## این ابزار چگونه کار می‌کند؟
 
