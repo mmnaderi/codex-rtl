@@ -7,6 +7,7 @@ import picocolors from 'picocolors';
 import ora from 'ora';
 import prompts from 'prompts';
 import * as asar from '@electron/asar';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,6 +16,21 @@ const { blue, cyan, green, red, yellow, bold } = picocolors;
 const pkgPath = path.join(__dirname, '..', 'package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 console.log(bold(cyan(`\n✨ Codex Smart RTL Patcher v${pkg.version}\n`)));
+
+function handleMacPermissionError(err) {
+    if (os.platform() === 'darwin') {
+        console.error(yellow('\nOn macOS, you can either:'));
+        console.error(yellow('  1. Grant your terminal "App Management" permission to run without sudo.'));
+        console.error(yellow('  2. Or, run this command with sudo (e.g. sudo npx codex-rtl)'));
+        console.log(blue('\nOpening System Settings directly to App Management for you...'));
+        try {
+            execSync('open "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_AppBundles"');
+            console.log(green('✔ Settings opened! Please enable the toggle for your terminal, then try again.\n'));
+        } catch (e) {
+            console.error(yellow('To open manually, go to: System Settings > Privacy & Security > App Management\n'));
+        }
+    }
+}
 
 function getDefaultPath() {
     if (os.platform() === 'darwin') {
@@ -68,6 +84,7 @@ async function main() {
         } catch (e) {
             spinner.fail('Failed to restore.');
             console.error(red(e.message));
+            handleMacPermissionError(e);
             process.exit(1);
         }
     }
@@ -84,10 +101,7 @@ async function main() {
         if (os.platform() === 'win32') {
             console.error(yellow('\nPlease run your terminal (PowerShell/CMD) as Administrator and try again.\n'));
         } else if (os.platform() === 'darwin') {
-            console.error(yellow('\nPlease ensure you run this command with sudo (if required).'));
-            console.error(yellow('On macOS, you might also need to give your terminal "App Management" permission.'));
-            console.error(yellow('Go to: System Settings > Privacy & Security > App Management'));
-            console.error(yellow('And enable the toggle for your terminal, then try again.\n'));
+            handleMacPermissionError(e);
         } else {
             console.error(yellow('\nPlease run this command with sudo.\n'));
         }
