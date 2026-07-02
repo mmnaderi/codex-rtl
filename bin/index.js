@@ -19,16 +19,12 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 
 function printBanner() {
     try {
-        const codexArt = figlet.textSync('Codex', { font: 'ANSI Shadow' }).split('\n');
-        const rtlArt = figlet.textSync('RTL', { font: 'ANSI Shadow' }).split('\n');
+        const fullArt = figlet.textSync('Codex RTL', { font: 'ANSI Shadow' }).split('\n');
 
         // Exact brand colors extracted from Codex app icon
         const c1 = { r: 62, g: 62, b: 245 };     // Deep Indigo-Blue (#3e3ef5)
         const c2 = { r: 117, g: 135, b: 247 };   // Mid-tone Cornflower Blue (#7587f7)
         const c3 = { r: 193, g: 189, b: 249 };   // Light Lavender-Blue (#c1bdf9)
-        
-        // Brand accent color for RTL (Vibrant Saffron Orange)
-        const rtlColor = { r: 255, g: 145, b: 0 };    // #ff9100
 
         const applyGradient = (text) => {
             let result = '';
@@ -59,25 +55,10 @@ function printBanner() {
             return result;
         };
 
-        const applySolid = (text) => {
-            let result = '';
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                if (char === ' ' || char === '\n') {
-                    result += char;
-                    continue;
-                }
-                result += `\x1b[38;2;${rtlColor.r};${rtlColor.g};${rtlColor.b}m${char}\x1b[0m`;
-            }
-            return result;
-        };
-
         console.log('');
-        for (let i = 0; i < codexArt.length; i++) {
-            if (!codexArt[i] && !rtlArt[i]) continue;
-            const cLine = applyGradient(codexArt[i] || '');
-            const rLine = applySolid(rtlArt[i] || '');
-            console.log(cLine + '   ' + rLine);
+        for (const line of fullArt) {
+            if (!line.trim()) continue;
+            console.log(applyGradient(line));
         }
         console.log(`\x1b[2m  Patcher Version ${pkg.version} | Premium RTL & UI Patcher for Codex\x1b[0m\n`);
     } catch (err) {
