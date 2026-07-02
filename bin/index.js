@@ -21,10 +21,25 @@ function printBanner() {
     try {
         const fullArt = figlet.textSync('Codex RTL', { font: 'ANSI Shadow' }).split('\n');
 
-        // Exact brand colors extracted from Codex app icon
-        const c1 = { r: 62, g: 62, b: 245 };     // Deep Indigo-Blue (#3e3ef5)
-        const c2 = { r: 117, g: 135, b: 247 };   // Mid-tone Cornflower Blue (#7587f7)
-        const c3 = { r: 193, g: 189, b: 249 };   // Light Lavender-Blue (#c1bdf9)
+        // Hex colors for the multi-color gradient
+        const hexColors = [
+            '#3126FF',
+            '#5770FF',
+            '#6F94FF',
+            '#7081FF',
+            '#BBA3FF',
+            '#C1C3FF'
+        ];
+
+        // Parse hex to RGB
+        const colors = hexColors.map(hex => {
+            const bigint = parseInt(hex.replace('#', ''), 16);
+            return {
+                r: (bigint >> 16) & 255,
+                g: (bigint >> 8) & 255,
+                b: bigint & 255
+            };
+        });
 
         const applyGradient = (text) => {
             let result = '';
@@ -36,20 +51,20 @@ function printBanner() {
                     continue;
                 }
                 const factor = len > 1 ? i / (len - 1) : 0;
-                let r, g, b;
-                if (factor <= 0.5) {
-                    // First half: c1 -> c2
-                    const t = factor * 2;
-                    r = Math.round(c1.r + t * (c2.r - c1.r));
-                    g = Math.round(c1.g + t * (c2.g - c1.g));
-                    b = Math.round(c1.b + t * (c2.b - c1.b));
-                } else {
-                    // Second half: c2 -> c3
-                    const t = (factor - 0.5) * 2;
-                    r = Math.round(c2.r + t * (c3.r - c2.r));
-                    g = Math.round(c2.g + t * (c3.g - c2.g));
-                    b = Math.round(c2.b + t * (c3.b - c2.b));
-                }
+                
+                // Find current segment in the multi-color transition
+                const segments = colors.length - 1;
+                const segmentFloat = factor * segments;
+                const segmentIdx = Math.min(Math.floor(segmentFloat), segments - 1);
+                const segmentFactor = segmentFloat - segmentIdx;
+
+                const cStart = colors[segmentIdx];
+                const cEnd = colors[segmentIdx + 1];
+
+                const r = Math.round(cStart.r + segmentFactor * (cEnd.r - cStart.r));
+                const g = Math.round(cStart.g + segmentFactor * (cEnd.g - cStart.g));
+                const b = Math.round(cStart.b + segmentFactor * (cEnd.b - cStart.b));
+
                 result += `\x1b[38;2;${r};${g};${b}m${char}\x1b[0m`;
             }
             return result;
