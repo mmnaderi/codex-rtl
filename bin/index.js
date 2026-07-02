@@ -19,7 +19,7 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 
 function printBanner() {
     try {
-        const fullArt = figlet.textSync('Codex RTL', { font: 'ANSI Shadow' }).split('\n');
+        const fullArt = figlet.textSync('Codex RTL', { font: 'RubiFont' }).split('\n');
 
         // Hex colors for the multi-color gradient
         const hexColors = [
@@ -75,7 +75,8 @@ function printBanner() {
             if (!line.trim()) continue;
             console.log(applyGradient(line));
         }
-        console.log(`\x1b[2m  Patcher Version ${pkg.version} | Premium RTL & UI Patcher for Codex\x1b[0m\n`);
+        console.log('');
+        console.log(`\x1b[2m  Patcher Version ${pkg.version} | RTL & UI Patcher for Codex\x1b[0m\n`);
     } catch (err) {
         // Fallback banner in case figlet has issues loading
         console.log(bold(cyan(`\n✨ Codex Smart RTL Patcher v${pkg.version}\n`)));
