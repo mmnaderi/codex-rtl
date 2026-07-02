@@ -8,6 +8,7 @@ import ora from 'ora';
 import prompts from 'prompts';
 import * as asar from '@electron/asar';
 import { execSync } from 'child_process';
+import figlet from 'figlet';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +16,65 @@ const { blue, cyan, green, red, yellow, bold } = picocolors;
 
 const pkgPath = path.join(__dirname, '..', 'package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-console.log(bold(cyan(`\n✨ Codex Smart RTL Patcher v${pkg.version}\n`)));
+
+function printBanner() {
+    try {
+        const codexArt = figlet.textSync('Codex', { font: 'ANSI Shadow' }).split('\n');
+        const rtlArt = figlet.textSync('RTL', { font: 'ANSI Shadow' }).split('\n');
+
+        // Dominant brand colors from Codex app icon
+        const codexStart = { r: 52, g: 44, b: 245 };   // Vibrant Blue/Indigo (#342cf5)
+        const codexEnd = { r: 122, g: 150, b: 249 };  // Light Blue (#7a96f9)
+        
+        // Brand color for RTL (Vibrant Saffron Orange)
+        const rtlColor = { r: 255, g: 145, b: 0 };    // #ff9100
+
+        const applyGradient = (text) => {
+            let result = '';
+            const len = text.length;
+            for (let i = 0; i < len; i++) {
+                const char = text[i];
+                if (char === ' ' || char === '\n') {
+                    result += char;
+                    continue;
+                }
+                const factor = len > 1 ? i / (len - 1) : 0;
+                const r = Math.round(codexStart.r + factor * (codexEnd.r - codexStart.r));
+                const g = Math.round(codexStart.g + factor * (codexEnd.g - codexStart.g));
+                const b = Math.round(codexStart.b + factor * (codexEnd.b - codexStart.b));
+                result += `\x1b[38;2;${r};${g};${b}m${char}\x1b[0m`;
+            }
+            return result;
+        };
+
+        const applySolid = (text) => {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (char === ' ' || char === '\n') {
+                    result += char;
+                    continue;
+                }
+                result += `\x1b[38;2;${rtlColor.r};${rtlColor.g};${rtlColor.b}m${char}\x1b[0m`;
+            }
+            return result;
+        };
+
+        console.log('');
+        for (let i = 0; i < codexArt.length; i++) {
+            if (!codexArt[i] && !rtlArt[i]) continue;
+            const cLine = applyGradient(codexArt[i] || '');
+            const rLine = applySolid(rtlArt[i] || '');
+            console.log(cLine + '   ' + rLine);
+        }
+        console.log(`\x1b[2m  Patcher Version ${pkg.version} | Premium RTL & UI Patcher for Codex\x1b[0m\n`);
+    } catch (err) {
+        // Fallback banner in case figlet has issues loading
+        console.log(bold(cyan(`\n✨ Codex Smart RTL Patcher v${pkg.version}\n`)));
+    }
+}
+
+printBanner();
 
 function handleMacPermissionError(err) {
     if (os.platform() === 'darwin') {
