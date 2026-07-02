@@ -76,7 +76,7 @@ function printBanner() {
             console.log(applyGradient(line));
         }
         console.log('');
-        console.log(`\x1b[2m  Patcher Version ${pkg.version} | RTL & UI Patcher for Codex\x1b[0m\n`);
+        console.log(`\x1b[2m  RTL & UI Patcher for Codex | ${pkg.version}\x1b[0m\n`);
     } catch (err) {
         // Fallback banner in case figlet has issues loading
         console.log(bold(cyan(`\n✨ Codex Smart RTL Patcher v${pkg.version}\n`)));
