@@ -1,12 +1,14 @@
-# codex-rtl
+# Codex Smart RTL
 
-This CLI tool automatically injects a sophisticated RTL engine into Codex, adding support for Persian (Farsi), Arabic, Hebrew, and other RTL languages, along with a sleek UI to configure fonts and settings on the fly.
+A smart RTL (Right-to-Left) patcher for the Codex desktop app, bringing polished support for Persian (Farsi), Arabic, Hebrew, and other RTL languages.
+
+Codex Smart RTL injects an RTL engine into the app, fixes mixed-direction typing issues, and adds a small settings panel for fonts, line height, and layout preferences.
 
 ## Features
 
 - **Smart Auto-Direction**: Automatically detects if a paragraph is RTL or LTR and aligns it perfectly.
 - **Force RTL Mode**: Want everything aligned to the right? Just toggle the switch.
-- **Custom Typography**: Define different fonts for your RTL text, English text, and Code blocks!
+- **Custom Typography**: Define different fonts for RTL text, English text, and code blocks.
 - **Line Height Control**: A precise slider to adjust the line height for better readability.
 - **Persian Keyboard Fix**: Maps `Shift + 2` to type `@` instead of `٬` on Persian keyboards.
 - **Beautiful Settings Panel**: A floating, non-intrusive UI widget at the bottom right corner.
@@ -15,7 +17,7 @@ This CLI tool automatically injects a sophisticated RTL engine into Codex, addin
 
 ## Installation
 
-You don't need to download any files. Just run the following command in your terminal:
+You don't need to download any files manually. Install Node.js first, then run the command for your operating system.
 
 ### macOS
 Before running the patcher, make sure [Node.js](https://nodejs.org) is installed. You can install it from the official website, or if you already use Homebrew:
@@ -73,15 +75,15 @@ Feel free to open issues or submit pull requests. Let's make Codex accessible an
 
 # پروژه Codex Smart RTL
 
-یک پچِ هوشمند و زیبا برای پشتیبانی از زبان‌های راست‌به‌چپ (RTL) در نرم‌افزار Codex.
+یک پچر هوشمند راست‌به‌چپ (RTL) برای اپلیکیشن دسکتاپ Codex، با پشتیبانی تمیزتر از فارسی، عربی، عبری و دیگر زبان‌های RTL.
 
-این ابزارِ خط فرمان (CLI) به صورت کاملاً خودکار یک موتور پیشرفتهٔ RTL را به هستهٔ برنامهٔ Codex تزریق می‌کند تا از زبان‌های فارسی، عربی و عبری به بهترین شکل پشتیبانی شود. همچنین یک پنل تنظیماتِ (UI) برای تغییر زندهٔ فونت‌ها در اختیار شما قرار می‌دهد.
+Codex Smart RTL یک موتور RTL را به برنامه تزریق می‌کند، مشکل تایپ و نمایش متن‌های ترکیبی راست‌به‌چپ/چپ‌به‌راست را بهتر مدیریت می‌کند، و یک پنل کوچک برای تنظیم فونت، فاصلهٔ خطوط و چیدمان در اختیار شما می‌گذارد.
 
 ## امکانات
 
 - **راست‌چین هوشمند (Smart Auto-Direction)**: سیستم به طور خودکار تشخیص می‌دهد که پاراگراف شما با حرف انگلیسی شروع شده یا فارسی، و چیدمان را بر همان اساس تنظیم می‌کند.
 - **حالت راست‌چینِ اجباری (Force RTL Mode)**: دوست دارید همه چیز (حتی پیام‌های انگلیسی) کاملاً در سمت راست قرار بگیرند؟ فقط کافیست سوئیچ را روشن کنید!
-- **تنظیماتِ پیشرفتهِ فونت**: می‌توانید برای متون فارسی، متون انگلیسی و کدهای برنامه‌نویسیِ داخل چت، فونت‌های کاملاً جداگانه‌ای تعریف کنید.
+- **تنظیماتِ پیشرفتهٔ فونت**: می‌توانید برای متون فارسی، متون انگلیسی و کدهای برنامه‌نویسیِ داخل چت، فونت‌های جداگانه تعریف کنید.
 - **کنترل فاصلهٔ خطوط (Line Height)**: با استفاده از اسلایدر می‌توانید فاصلهٔ خطوط را برای خوانایی بهتر متن تنظیم کنید.
 - **حل مشکل کیبورد فارسی**: این ابزار کلید ترکیبی `Shift + 2` روی کیبورد فارسی را اصلاح می‌کند تا به جای «٬» علامت `@` تایپ شود.
 - **پنل تنظیمات زیبا**: تمام این تنظیمات در یک ویجتِ کوچک، مدرن و شناور در پایینِ صفحه قرار گرفته‌اند.
@@ -90,7 +92,7 @@ Feel free to open issues or submit pull requests. Let's make Codex accessible an
 
 ## آموزش نصب
 
-بدون نیاز به دانلود هیچ فایلی، فقط کافیست دستور زیر را در ترمینال سیستم خود اجرا کنید:
+نیازی نیست فایل‌های پروژه را دستی دانلود کنید. ابتدا Node.js را نصب کنید، سپس دستور مربوط به سیستم‌عامل خود را اجرا کنید.
 
 ### در مک (macOS)
 قبل از اجرای پچر، مطمئن شوید [Node.js](https://nodejs.org) روی سیستم شما نصب است. می‌توانید آن را از سایت رسمی Node.js نصب کنید، یا اگر از Homebrew استفاده می‌کنید:
@@ -139,6 +141,6 @@ npx codex-rtl --restore
 
 ## مشارکت در توسعه
 
-با کمال میل از نظرات، گزارشِ باگ‌ها و Pull Request های شما استقبال می‌شود. 
+با کمال میل از نظرات، گزارشِ باگ‌ها و Pull Request های شما استقبال می‌شود.
 
 </div>
