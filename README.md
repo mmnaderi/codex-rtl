@@ -20,6 +20,7 @@ You don't need to download any files. Just run the following command in your ter
 ### macOS
 Simply run:
 ```bash
+brew install node # Skip this line if Node.js is already installed.
 npx codex-rtl
 ```
 > **First time?** If you get a "Permission Denied" error, the tool will **automatically open** the App Management settings page for you. Just enable the toggle for your terminal app, then run the command again. No `sudo` needed!
@@ -28,16 +29,16 @@ npx codex-rtl
 
 ### Linux
 ```bash
+sudo apt install nodejs npm # Skip this line if Node.js is already installed.
 sudo npx codex-rtl
 ```
 
 ### Windows
-Open **PowerShell** or **Command Prompt** as **Administrator** (Right-click -> Run as Administrator), then run:
-```bash
+Open **PowerShell** as **Administrator** (Right-click -> Run as Administrator), then run:
+```powershell
+winget install OpenJS.NodeJS.LTS # Skip this line if Node.js is already installed.
 npx codex-rtl
 ```
-
-> **Note:** You must have [Node.js](https://nodejs.org) installed on your system to run this command.
 
 > [!WARNING]
 > **App Updates:** Since updating the Codex application overwrites its internal files, the RTL patch will be removed. You will need to run the installation command again after each update to re-apply the patch.
@@ -91,6 +92,7 @@ Feel free to open issues or submit pull requests. Let's make Codex accessible an
 ### در مک (macOS)
 کافیست دستور زیر را اجرا کنید:
 ```bash
+brew install node # اگر Node.js از قبل نصب است، این خط را رد کنید.
 npx codex-rtl
 ```
 > **اولین بار؟** اگر خطای Permission Denied دریافت کردید، ابزار به صورت **خودکار** صفحهٔ تنظیمات App Management را برای شما باز می‌کند. فقط سوئیچ ترمینال خود (مثلاً Terminal، iTerm2 یا VS Code) را فعال کنید و دوباره دستور را اجرا کنید. نیازی به `sudo` نیست!
@@ -99,16 +101,16 @@ npx codex-rtl
 
 ### در لینوکس
 ```bash
+sudo apt install nodejs npm # اگر Node.js از قبل نصب است، این خط را رد کنید.
 sudo npx codex-rtl
 ```
 
 ### در ویندوز
-برنامهٔ **PowerShell** یا **Command Prompt** را در حالت **Administrator** (راست‌کلیک -> Run as Administrator) باز کنید و دستور زیر را بنویسید:
-```bash
+برنامهٔ **PowerShell** را در حالت **Administrator** (راست‌کلیک -> Run as Administrator) باز کنید و دستور زیر را بنویسید:
+```powershell
+winget install OpenJS.NodeJS.LTS # اگر Node.js از قبل نصب است، این خط را رد کنید.
 npx codex-rtl
 ```
-
-> **نکته:** برای اجرای این دستور باید حتماً [Node.js](https://nodejs.org) روی سیستم شما نصب باشد.
 
 > [!WARNING]
 > **به‌روزرسانی برنامه:** از آنجا که آپدیت کردنِ برنامهٔ Codex کدهای آن را بازنویسی می‌کند، پچِ اعمال‌شده از بین خواهد رفت و لازم است پس از هر بار آپدیت، دستور نصب را مجدداً اجرا کنید.
