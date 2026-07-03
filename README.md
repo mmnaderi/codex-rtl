@@ -18,9 +18,12 @@ This CLI tool automatically injects a sophisticated RTL engine into Codex, addin
 You don't need to download any files. Just run the following command in your terminal:
 
 ### macOS
+Before running the patcher, make sure [Node.js](https://nodejs.org) is installed. You can install it from the official website, or if you already use Homebrew:
+```bash
+brew install node
+```
 Simply run:
 ```bash
-brew install node # Skip this line if Node.js is already installed.
 npx codex-rtl
 ```
 > **First time?** If you get a "Permission Denied" error, the tool will **automatically open** the App Management settings page for you. Just enable the toggle for your terminal app, then run the command again. No `sudo` needed!
@@ -90,9 +93,12 @@ Feel free to open issues or submit pull requests. Let's make Codex accessible an
 بدون نیاز به دانلود هیچ فایلی، فقط کافیست دستور زیر را در ترمینال سیستم خود اجرا کنید:
 
 ### در مک (macOS)
+قبل از اجرای پچر، مطمئن شوید [Node.js](https://nodejs.org) روی سیستم شما نصب است. می‌توانید آن را از سایت رسمی Node.js نصب کنید، یا اگر از Homebrew استفاده می‌کنید:
+```bash
+brew install node
+```
 کافیست دستور زیر را اجرا کنید:
 ```bash
-brew install node # اگر Node.js از قبل نصب است، این خط را رد کنید.
 npx codex-rtl
 ```
 > **اولین بار؟** اگر خطای Permission Denied دریافت کردید، ابزار به صورت **خودکار** صفحهٔ تنظیمات App Management را برای شما باز می‌کند. فقط سوئیچ ترمینال خود (مثلاً Terminal، iTerm2 یا VS Code) را فعال کنید و دوباره دستور را اجرا کنید. نیازی به `sudo` نیست!
