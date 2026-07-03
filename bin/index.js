@@ -257,6 +257,12 @@ try {
         
         win.webContents.on('dom-ready', () => {
             try {
+                const title = win.getTitle() || '';
+                if (title.startsWith('Pet Surface') || title === 'Dictation') return;
+                if (!win.isResizable() || (typeof win.isFocusable === 'function' && !win.isFocusable())) {
+                    return;
+                }
+                
                 const path = require('path');
                 const fs = require('fs');
                 const fontPath = path.join(__dirname, 'Vazirmatn-Variable.woff2');
