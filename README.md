@@ -1,4 +1,4 @@
-# Codex Smart RTL
+# Codex Smart RTL & UI Patcher
 
 A smart RTL (Right-to-Left) patcher for the Codex desktop app, bringing polished support for Persian (Farsi), Arabic, Hebrew, and other RTL languages.
 
@@ -73,7 +73,7 @@ Feel free to open issues or submit pull requests. Let's make Codex accessible an
 
 <div dir="rtl">
 
-# پروژه Codex Smart RTL
+# اصلاح‌کنندهٔ هوشمند راست‌به‌چپ در Codex
 
 یک پچر هوشمند راست‌به‌چپ (RTL) برای اپلیکیشن دسکتاپ Codex، با پشتیبانی تمیزتر از فارسی، عربی، عبری و دیگر زبان‌های RTL.
 
