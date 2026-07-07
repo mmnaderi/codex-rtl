@@ -110,12 +110,111 @@ function getDefaultPath() {
     }
 }
 
+function getStorePath() {
+    if (os.platform() !== 'win32') return null;
+    try {
+        const stdout = execSync(
+            'powershell -Command "Get-AppxPackage *Codex* | Select-Object -ExpandProperty InstallLocation"',
+            { stdio: ['ignore', 'pipe', 'ignore'], timeout: 3000 }
+        );
+        const installDir = stdout.toString().trim();
+        if (installDir) {
+            const possiblePaths = [
+                path.join(installDir, 'app', 'resources', 'app.asar'),
+                path.join(installDir, 'resources', 'app.asar')
+            ];
+            for (const p of possiblePaths) {
+                if (fs.existsSync(p)) {
+                    return p;
+                }
+            }
+        }
+    } catch (e) {
+        // PowerShell command failed or package not found
+    }
+    return null;
+}
+
+function makeWritableRecursively(dir) {
+    if (!fs.existsSync(dir)) return;
+    try {
+        const stats = fs.statSync(dir);
+        if (stats.isDirectory()) {
+            fs.chmodSync(dir, 0o777);
+            const files = fs.readdirSync(dir);
+            for (const file of files) {
+                makeWritableRecursively(path.join(dir, file));
+            }
+        } else {
+            fs.chmodSync(dir, 0o666);
+        }
+    } catch (e) {
+        // Ignore permission errors if files cannot be modified
+    }
+}
+
+function findExecutable(dir) {
+    if (!fs.existsSync(dir)) return null;
+    try {
+        const files = fs.readdirSync(dir);
+        // 1. Look for Codex.exe (case-insensitive)
+        const codexExe = files.find(f => f.toLowerCase() === 'codex.exe');
+        if (codexExe) return path.join(dir, codexExe);
+        
+        // 2. Look for any other .exe files, ignoring common helpers
+        const exes = files.filter(f => {
+            const name = f.toLowerCase();
+            return name.endsWith('.exe') && 
+                   !name.includes('helper') && 
+                   !name.includes('uninstall') && 
+                   !name.includes('elevate');
+        });
+        if (exes.length > 0) {
+            return path.join(dir, exes[0]);
+        }
+        
+        // 3. Fallback to any .exe
+        const anyExe = files.find(f => f.toLowerCase().endsWith('.exe'));
+        return anyExe ? path.join(dir, anyExe) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function createWindowsShortcut(exePath, destDir) {
+    try {
+        const desktopPath = path.join(os.homedir(), 'Desktop');
+        const shortcutPath = path.join(desktopPath, 'Codex (Patched).lnk');
+        
+        // Normalize paths for Windows shells
+        const normShortcutPath = shortcutPath.replace(/\//g, '\\');
+        const normExePath = exePath.replace(/\//g, '\\');
+        const normDestDir = destDir.replace(/\//g, '\\');
+
+        const script = `$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('${normShortcutPath}'); $Shortcut.TargetPath = '${normExePath}'; $Shortcut.WorkingDirectory = '${normDestDir}'; $Shortcut.Save();`;
+        // Escape single quotes for PowerShell
+        const escapedScript = script.replace(/'/g, "''");
+        
+        execSync(`powershell -Command "${escapedScript}"`, { stdio: 'ignore' });
+        return shortcutPath;
+    } catch (e) {
+        return null;
+    }
+}
+
 async function getAsarPath() {
     let asarPath = getDefaultPath();
     if (fs.existsSync(asarPath)) {
         console.log(blue(`ℹ Found Codex installation at:`));
         console.log(`  ${asarPath}\n`);
-        return asarPath;
+        return { path: asarPath, isStore: false };
+    }
+
+    const storePath = getStorePath();
+    if (storePath) {
+        console.log(blue(`ℹ Found Microsoft Store Codex installation at:`));
+        console.log(`  ${storePath}\n`);
+        return { path: storePath, isStore: true };
     }
 
     console.log(yellow(`⚠ Could not find Codex at default location.`));
@@ -129,39 +228,93 @@ async function getAsarPath() {
         console.error(red('\n✖ Invalid path. Aborting.\n'));
         process.exit(1);
     }
-    return response.customPath;
+    
+    const isStore = response.customPath.toLowerCase().includes('windowsapps');
+    return { path: response.customPath, isStore };
 }
 
 const args = process.argv.slice(2);
 const isRestore = args.includes('--restore');
 
 async function main() {
-    const asarPath = await getAsarPath();
-    const backupPath = asarPath + '.bak';
+    let { path: asarPath, isStore } = await getAsarPath();
+    let workingAsarPath = asarPath;
+    let backupPath = asarPath + '.bak';
     
     if (isRestore) {
-        if (!fs.existsSync(backupPath)) {
-            console.error(red('✖ No backup found to restore.\n'));
-            process.exit(1);
+        if (isStore) {
+            const storeDestDir = path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Codex-Patched');
+            const shortcutPath = path.join(os.homedir(), 'Desktop', 'Codex (Patched).lnk');
+            const spinner = ora('Removing patched Codex copy...').start();
+            try {
+                if (fs.existsSync(storeDestDir)) {
+                    fs.rmSync(storeDestDir, { recursive: true, force: true });
+                }
+                if (fs.existsSync(shortcutPath)) {
+                    fs.rmSync(shortcutPath, { force: true });
+                }
+                spinner.succeed('Successfully removed patched Codex copy!\n');
+                process.exit(0);
+            } catch (e) {
+                spinner.fail('Failed to remove patched copy.');
+                console.error(red(e.message));
+                process.exit(1);
+            }
+        } else {
+            if (!fs.existsSync(backupPath)) {
+                console.error(red('✖ No backup found to restore.\n'));
+                process.exit(1);
+            }
+            const spinner = ora('Restoring original app.asar...').start();
+            try {
+                fs.copyFileSync(backupPath, asarPath);
+                spinner.succeed('Successfully restored original Codex!\n');
+                process.exit(0);
+            } catch (e) {
+                spinner.fail('Failed to restore.');
+                console.error(red(e.message));
+                handleMacPermissionError(e);
+                process.exit(1);
+            }
         }
-        const spinner = ora('Restoring original app.asar...').start();
+    }
+
+    if (isStore) {
+        console.log(cyan('ℹ Microsoft Store version detected. Working on a local copy to bypass WindowsApps restrictions...'));
+        const storeDestDir = path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Codex-Patched');
+        const appDir = path.dirname(path.dirname(asarPath));
+        
+        const copySpinner = ora('Copying Codex to user directory (this may take a few seconds)...').start();
         try {
-            fs.copyFileSync(backupPath, asarPath);
-            spinner.succeed('Successfully restored original Codex!\n');
-            process.exit(0);
+            if (fs.existsSync(storeDestDir)) {
+                fs.rmSync(storeDestDir, { recursive: true, force: true });
+            }
+            fs.mkdirSync(storeDestDir, { recursive: true });
+            if (typeof fs.cpSync === 'function') {
+                fs.cpSync(appDir, storeDestDir, { recursive: true });
+            } else {
+                execSync(`xcopy "${appDir}" "${storeDestDir}" /E /I /H /Y`, { stdio: 'ignore' });
+            }
+            
+            // Remove read-only attributes from the copied files
+            makeWritableRecursively(storeDestDir);
+            
+            copySpinner.succeed('Codex application files successfully copied to user directory.');
+            
+            workingAsarPath = path.join(storeDestDir, 'resources', 'app.asar');
+            backupPath = workingAsarPath + '.bak';
         } catch (e) {
-            spinner.fail('Failed to restore.');
+            copySpinner.fail('Failed to copy application files.');
             console.error(red(e.message));
-            handleMacPermissionError(e);
             process.exit(1);
         }
     }
 
     const spinner = ora('Checking permissions and backing up...').start();
     try {
-        fs.accessSync(path.dirname(asarPath), fs.constants.W_OK);
+        fs.accessSync(path.dirname(workingAsarPath), fs.constants.W_OK);
         if (!fs.existsSync(backupPath)) {
-            fs.copyFileSync(asarPath, backupPath);
+            fs.copyFileSync(workingAsarPath, backupPath);
         }
     } catch (e) {
         spinner.fail('Permission Denied.');
@@ -176,16 +329,20 @@ async function main() {
         process.exit(1);
     }
     
-    const extractDir = path.join(path.dirname(asarPath), 'app-extracted-codex-rtl-temp');
+    const extractDir = path.join(path.dirname(workingAsarPath), 'app-extracted-codex-rtl-temp');
     spinner.text = 'Extracting app.asar (this may take a few seconds)...';
     try {
         if (fs.existsSync(extractDir)) {
             fs.rmSync(extractDir, { recursive: true, force: true });
         }
-        asar.extractAll(asarPath, extractDir);
+        asar.extractAll(workingAsarPath, extractDir);
     } catch (e) {
         spinner.fail('Failed to extract ASAR.');
         console.error(red(e.message));
+        if (e.code === 'ENOENT' && !fs.existsSync(workingAsarPath + '.unpacked')) {
+            console.error(yellow('\nTip: This ASAR file requires a ".unpacked" folder next to it.'));
+            console.error(yellow('Make sure to copy "app.asar.unpacked" along with "app.asar".\n'));
+        }
         process.exit(1);
     }
 
@@ -325,10 +482,27 @@ try {
 
     spinner.text = 'Repacking app.asar (almost done)...';
     try {
-        await asar.createPackage(extractDir, asarPath);
+        await asar.createPackage(extractDir, workingAsarPath);
         fs.rmSync(extractDir, { recursive: true, force: true });
         spinner.succeed('Successfully patched Codex!');
-        console.log(green('\n✨ RTL Features and DevTools have been enabled. Please restart Codex to see the changes.\n'));
+        
+        if (isStore) {
+            const storeDestDir = path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Codex-Patched');
+            const exePath = findExecutable(storeDestDir);
+            if (exePath) {
+                const shortcutPath = createWindowsShortcut(exePath, storeDestDir);
+                if (shortcutPath) {
+                    console.log(green(`✔ Created a desktop shortcut at: ${shortcutPath}`));
+                }
+                console.log(green(`\n✨ Patched Codex is ready! You can run it from:`));
+                console.log(cyan(`  ${exePath}\n`));
+            } else {
+                console.log(green(`\n✨ Patched Codex is ready in:`));
+                console.log(cyan(`  ${storeDestDir}\n`));
+            }
+        } else {
+            console.log(green('\n✨ RTL Features and DevTools have been enabled. Please restart Codex to see the changes.\n'));
+        }
     } catch (e) {
         spinner.fail('Failed to repack ASAR.');
         console.error(red(e.message));
