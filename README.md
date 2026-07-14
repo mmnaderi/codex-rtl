@@ -2,6 +2,8 @@
 
 A smart RTL (Right-to-Left) patcher for the ChatGPT desktop app with Codex, as well as legacy standalone Codex installations. It brings polished support for Persian (Farsi), Arabic, Hebrew, and other RTL languages.
 
+![ChatGPT/Codex Smart RTL Screenshot](codex-rtl-screenshot.png)
+
 Codex Smart RTL injects an RTL engine into the app, fixes mixed-direction typing issues, and adds a small settings panel for fonts, line height, and layout preferences.
 
 ## Features
@@ -86,6 +88,8 @@ Feel free to open issues or submit pull requests. Let's make Codex accessible an
 # اصلاح‌کنندهٔ هوشمند راست‌به‌چپ در ChatGPT/Codex
 
 یک پچر هوشمند راست‌به‌چپ (RTL) برای اپ جدید ChatGPT که Codex در آن ادغام شده است، و نسخه‌های مستقل قدیمی Codex؛ با پشتیبانی از فارسی، عربی، عبری و دیگر زبان‌های RTL.
+
+![پیش‌نمایش پچ راست‌به‌چپ Codex](codex-rtl-screenshot.png)
 
 Codex Smart RTL یک موتور RTL را به برنامه تزریق می‌کند، مشکل تایپ و نمایش متن‌های ترکیبی راست‌به‌چپ/چپ‌به‌راست را بهتر مدیریت می‌کند، و یک پنل کوچک برای تنظیم فونت، فاصلهٔ خطوط و چیدمان در اختیار شما می‌گذارد.
 
