@@ -2,19 +2,30 @@
 
 This file documents technical insights, findings, and architectural details discovered while developing the Codex Smart RTL patcher.
 
-## Codex Application Structure
+## ChatGPT/Codex Application Structure
 
-Codex is an Electron-based desktop application. Its packaged code inside `app.asar` is structured as follows:
+The current ChatGPT desktop app with Codex is still an Electron Codex bundle internally. The inspected macOS release uses `CFBundleIdentifier=com.openai.codex`, `codexAppBrand=chatgpt`, and the following packaged structure:
 
-*   **Entry Point:** `.vite/build/bootstrap.js` (defined as `"main"` in `package.json`). This file bootstraps the application and starts the main process.
-*   **Main JS Bundle:** `.vite/build/main-CE4LBHPy.js`. Contains window management, app lifecycle event handling, and features orchestration.
+*   **Entry Point:** `.vite/build/early-bootstrap.js`, defined by `package.json.main`. Never assume a fixed entry filename.
+*   **Bootstrap Bundle:** `.vite/build/bootstrap-<hash>.js`.
+*   **Main JS Bundle:** `.vite/build/main-<hash>.js`. Contains window management, app lifecycle event handling, and features orchestration.
 *   **Frontend Assets:** Located under `/webview/`. The main file is `/webview/index.html`, which loads the React/Vite client application bundle from `/webview/assets/`.
+
+Legacy standalone Codex builds used `.vite/build/bootstrap.js` directly. Reading `package.json.main` supports both layouts.
+
+### ASAR integrity and unpacked files
+
+Current Electron builds store the SHA-256 of the ASAR `headerString` in `Contents/Info.plist` under `ElectronAsarIntegrity -> Resources/app.asar`. A repack must update this value.
+
+The inspected ChatGPT release also contains 639 unpacked files used by native dependencies such as `node-pty`, `better-sqlite3`, and `objc-js`. Repacking with default `createPackage()` loses those flags. The patcher derives unpack patterns from the original header, repacks to a temporary archive, and refuses replacement unless the exact unpacked path set is preserved.
+
+Backups must live outside the signed `.app` bundle. Versioned backups are stored under `~/.codex-rtl/backups/`.
 
 ---
 
 ## Developer Settings & Features Activation
 
-By default, Codex disables DevTools, Inspect Element, and the Debug Menu in production builds (`"codexBuildFlavor": "prod"`). These are controlled by the following variables in `.vite/build/main-CE4LBHPy.js`:
+By default, Codex disables DevTools, Inspect Element, and the Debug Menu in production builds (`"codexBuildFlavor": "prod"`). These are controlled inside `.vite/build/main-<hash>.js`:
 
 *   `m` / `allowDevtools`: Controls if Developer Tools can be opened.
 *   `h` / `allowInspectElement`: Controls if right-clicking allows "Inspect Element".
@@ -35,7 +46,8 @@ To activate these features in the production build:
 
 For injecting RTL styles and controls:
 *   We hook into Electron's global `browser-window-created` event.
-*   By appending this event hook to the end of `.vite/build/bootstrap.js`, we ensure that any window created by the app gets the custom console and CSS/JS payload injected automatically on the `dom-ready` event.
+*   The event hook is appended to the manifest-defined Electron entry point. In the current ChatGPT bundle this is `.vite/build/early-bootstrap.js`, which registers the hook before the hashed bootstrap module starts the main application.
+*   Injection is restricted to internal `app://-/` or packaged `file://` pages so browser, checkout, and other remote surfaces are not modified.
 
 ---
 

@@ -7,8 +7,19 @@ import picocolors from 'picocolors';
 import ora from 'ora';
 import prompts from 'prompts';
 import * as asar from '@electron/asar';
-import { execSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import figlet from 'figlet';
+import {
+    computeAsarHeaderHash,
+    createPackOptionsFromHeader,
+    getBackupPath,
+    getMacInfoPlistPath,
+    listUnpackedFiles,
+    listUnpackedFilesFromHeader,
+    manifestsMatch,
+    readArchiveManifest,
+    resolveArchiveEntryPoint
+} from './asar-utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +27,13 @@ const { blue, cyan, green, red, yellow, bold } = picocolors;
 
 const pkgPath = path.join(__dirname, '..', 'package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+const args = process.argv.slice(2);
+const isRestore = args.includes('--restore');
+
+function getArgValue(name) {
+    const index = args.indexOf(name);
+    return index >= 0 ? args[index + 1] : null;
+}
 
 function printBanner() {
     try {
@@ -76,7 +94,7 @@ function printBanner() {
             console.log(applyGradient(line));
         }
         console.log('');
-        console.log(`\x1b[2m  RTL & UI Patcher for Codex | ${pkg.version}\x1b[0m\n`);
+        console.log(`\x1b[2m  RTL & UI Patcher for ChatGPT / Codex | ${pkg.version}\x1b[0m\n`);
     } catch (err) {
         // Fallback banner in case figlet has issues loading
         console.log(bold(cyan(`\n✨ Codex Smart RTL Patcher v${pkg.version}\n`)));
@@ -100,13 +118,22 @@ function handleMacPermissionError(err) {
     }
 }
 
-function getDefaultPath() {
+function getDefaultPaths() {
     if (os.platform() === 'darwin') {
-        return '/Applications/Codex.app/Contents/Resources/app.asar';
+        return [
+            '/Applications/ChatGPT.app/Contents/Resources/app.asar',
+            '/Applications/Codex.app/Contents/Resources/app.asar'
+        ];
     } else if (os.platform() === 'win32') {
-        return path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Codex', 'resources', 'app.asar');
+        return [
+            path.join(process.env.LOCALAPPDATA || '', 'Programs', 'ChatGPT', 'resources', 'app.asar'),
+            path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Codex', 'resources', 'app.asar')
+        ];
     } else {
-        return '/opt/Codex/resources/app.asar';
+        return [
+            '/opt/ChatGPT/resources/app.asar',
+            '/opt/Codex/resources/app.asar'
+        ];
     }
 }
 
@@ -203,11 +230,27 @@ function createWindowsShortcut(exePath, destDir) {
 }
 
 async function getAsarPath() {
-    let asarPath = getDefaultPath();
-    if (fs.existsSync(asarPath)) {
-        console.log(blue(`ℹ Found Codex installation at:`));
-        console.log(`  ${asarPath}\n`);
-        return { path: asarPath, isStore: false };
+    const explicitPath = getArgValue('--asar');
+    if (args.includes('--asar') && !explicitPath) {
+        console.error(red('\n✖ --asar requires a path to app.asar.\n'));
+        process.exit(1);
+    }
+    if (explicitPath) {
+        const resolvedPath = path.resolve(explicitPath);
+        if (!fs.existsSync(resolvedPath)) {
+            console.error(red(`\n✖ ASAR file not found: ${resolvedPath}\n`));
+            process.exit(1);
+        }
+        return { path: resolvedPath, isStore: resolvedPath.toLowerCase().includes('windowsapps') };
+    }
+
+    for (const asarPath of getDefaultPaths()) {
+        if (fs.existsSync(asarPath)) {
+            const appName = asarPath.includes('ChatGPT.app') ? 'ChatGPT (Codex)' : 'Codex';
+            console.log(blue(`ℹ Found ${appName} installation at:`));
+            console.log(`  ${asarPath}\n`);
+            return { path: asarPath, isStore: false };
+        }
     }
 
     const storePath = getStorePath();
@@ -217,7 +260,7 @@ async function getAsarPath() {
         return { path: storePath, isStore: true };
     }
 
-    console.log(yellow(`⚠ Could not find Codex at default location.`));
+    console.log(yellow(`⚠ Could not find ChatGPT/Codex at a default location.`));
     const response = await prompts({
         type: 'text',
         name: 'customPath',
@@ -233,14 +276,135 @@ async function getAsarPath() {
     return { path: response.customPath, isStore };
 }
 
-const args = process.argv.slice(2);
-const isRestore = args.includes('--restore');
+function getMacAppBundlePath(asarPath) {
+    const infoPlist = getMacInfoPlistPath(asarPath);
+    return infoPlist ? path.dirname(path.dirname(infoPlist)) : null;
+}
+
+function assertMacAppIsNotRunning(asarPath) {
+    if (os.platform() !== 'darwin') return;
+    const appBundle = getMacAppBundlePath(asarPath);
+    if (!appBundle) return;
+    try {
+        execFileSync('/usr/bin/pgrep', ['-f', `${appBundle}/Contents/`], { stdio: 'ignore' });
+        throw new Error(`Please quit ${path.basename(appBundle, '.app')} before patching or restoring it.`);
+    } catch (error) {
+        if (error.status === 1) return;
+        throw error;
+    }
+}
+
+function setMacAsarIntegrity(asarPath, archiveWithExpectedHeader = asarPath) {
+    if (os.platform() !== 'darwin') return false;
+    const infoPlist = getMacInfoPlistPath(asarPath);
+    if (!infoPlist) return false;
+
+    try {
+        const algorithm = execFileSync(
+            '/usr/libexec/PlistBuddy',
+            ['-c', 'Print :ElectronAsarIntegrity:Resources/app.asar:algorithm', infoPlist],
+            { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
+        ).trim();
+        if (algorithm.toUpperCase() !== 'SHA256') {
+            throw new Error(`Unsupported Electron ASAR integrity algorithm: ${algorithm}`);
+        }
+    } catch (error) {
+        if (error.message?.startsWith('Unsupported Electron')) throw error;
+        return false;
+    }
+
+    const headerHash = computeAsarHeaderHash(archiveWithExpectedHeader);
+    execFileSync(
+        '/usr/libexec/PlistBuddy',
+        ['-c', `Set :ElectronAsarIntegrity:Resources/app.asar:hash ${headerHash}`, infoPlist],
+        { stdio: 'ignore' }
+    );
+    return true;
+}
+
+function moveFileIntoPlace(source, destination) {
+    if (os.platform() === 'win32') {
+        fs.copyFileSync(source, destination);
+        fs.rmSync(source, { force: true });
+    } else {
+        fs.renameSync(source, destination);
+    }
+}
+
+function migrateAdjacentBackup(asarPath, backupPath) {
+    const adjacentBackup = `${asarPath}.bak`;
+    if (!fs.existsSync(adjacentBackup)) return;
+
+    fs.mkdirSync(path.dirname(backupPath), { recursive: true });
+    try {
+        const adjacentHash = computeAsarHeaderHash(adjacentBackup);
+        const backupHash = fs.existsSync(backupPath) ? computeAsarHeaderHash(backupPath) : null;
+        if (adjacentHash !== backupHash) {
+            const legacyPath = path.join(path.dirname(backupPath), `app-legacy-${adjacentHash.slice(0, 12)}.asar`);
+            if (!fs.existsSync(legacyPath)) fs.copyFileSync(adjacentBackup, legacyPath);
+        }
+        fs.rmSync(adjacentBackup, { force: true });
+    } catch (error) {
+        const legacyPath = path.join(path.dirname(backupPath), `app-legacy-${Date.now()}.asar`);
+        fs.copyFileSync(adjacentBackup, legacyPath);
+        fs.rmSync(adjacentBackup, { force: true });
+    }
+}
+
+function ensureExternalBackup(asarPath, manifest) {
+    const backupPath = getBackupPath(asarPath, manifest);
+    const adjacentBackup = `${asarPath}.bak`;
+    fs.mkdirSync(path.dirname(backupPath), { recursive: true });
+
+    if (!fs.existsSync(backupPath)) {
+        let source = asarPath;
+        if (fs.existsSync(adjacentBackup)) {
+            try {
+                const adjacentManifest = readArchiveManifest(adjacentBackup);
+                if (manifestsMatch(manifest, adjacentManifest)) source = adjacentBackup;
+            } catch {
+                // Keep the current archive as the primary backup and preserve the legacy file below.
+            }
+        }
+        fs.copyFileSync(source, backupPath, fs.constants.COPYFILE_EXCL);
+    }
+
+    migrateAdjacentBackup(asarPath, backupPath);
+    return backupPath;
+}
+
+function findRestoreBackup(asarPath, manifest) {
+    const backupPath = getBackupPath(asarPath, manifest);
+    if (fs.existsSync(backupPath)) return backupPath;
+
+    const adjacentBackup = `${asarPath}.bak`;
+    if (!fs.existsSync(adjacentBackup)) return null;
+    fs.mkdirSync(path.dirname(backupPath), { recursive: true });
+    fs.copyFileSync(adjacentBackup, backupPath, fs.constants.COPYFILE_EXCL);
+    migrateAdjacentBackup(asarPath, backupPath);
+    return backupPath;
+}
+
+function replaceArchiveWithRollback(newAsarPath, targetAsarPath, backupPath) {
+    try {
+        moveFileIntoPlace(newAsarPath, targetAsarPath);
+        setMacAsarIntegrity(targetAsarPath);
+    } catch (error) {
+        try {
+            fs.copyFileSync(backupPath, targetAsarPath);
+            setMacAsarIntegrity(targetAsarPath, backupPath);
+        } catch (rollbackError) {
+            error.message += ` Rollback also failed: ${rollbackError.message}`;
+        }
+        throw error;
+    }
+}
 
 async function main() {
     let { path: asarPath, isStore } = await getAsarPath();
     let workingAsarPath = asarPath;
-    let backupPath = asarPath + '.bak';
-    
+    let manifest = readArchiveManifest(asarPath);
+
     if (isRestore) {
         if (isStore) {
             const storeDestDir = path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Codex-Patched');
@@ -261,16 +425,22 @@ async function main() {
                 process.exit(1);
             }
         } else {
-            if (!fs.existsSync(backupPath)) {
+            assertMacAppIsNotRunning(asarPath);
+            const backupPath = findRestoreBackup(asarPath, manifest);
+            if (!backupPath || !fs.existsSync(backupPath)) {
                 console.error(red('✖ No backup found to restore.\n'));
                 process.exit(1);
             }
             const spinner = ora('Restoring original app.asar...').start();
+            const restoreTempPath = `${asarPath}.codex-rtl-restore-${process.pid}`;
             try {
-                fs.copyFileSync(backupPath, asarPath);
-                spinner.succeed('Successfully restored original Codex!\n');
+                fs.copyFileSync(backupPath, restoreTempPath);
+                moveFileIntoPlace(restoreTempPath, asarPath);
+                setMacAsarIntegrity(asarPath, backupPath);
+                spinner.succeed('Successfully restored original ChatGPT/Codex!\n');
                 process.exit(0);
             } catch (e) {
+                fs.rmSync(restoreTempPath, { force: true });
                 spinner.fail('Failed to restore.');
                 console.error(red(e.message));
                 handleMacPermissionError(e);
@@ -302,7 +472,7 @@ async function main() {
             copySpinner.succeed('Codex application files successfully copied to user directory.');
             
             workingAsarPath = path.join(storeDestDir, 'resources', 'app.asar');
-            backupPath = workingAsarPath + '.bak';
+            manifest = readArchiveManifest(workingAsarPath);
         } catch (e) {
             copySpinner.fail('Failed to copy application files.');
             console.error(red(e.message));
@@ -310,12 +480,15 @@ async function main() {
         }
     }
 
+    assertMacAppIsNotRunning(workingAsarPath);
+
     const spinner = ora('Checking permissions and backing up...').start();
+    let backupPath;
     try {
         fs.accessSync(path.dirname(workingAsarPath), fs.constants.W_OK);
-        if (!fs.existsSync(backupPath)) {
-            fs.copyFileSync(workingAsarPath, backupPath);
-        }
+        const infoPlist = getMacInfoPlistPath(workingAsarPath);
+        if (infoPlist) fs.accessSync(infoPlist, fs.constants.W_OK);
+        backupPath = ensureExternalBackup(workingAsarPath, manifest);
     } catch (e) {
         spinner.fail('Permission Denied.');
         console.error(red('\nSystem Error: ' + e.message));
@@ -328,15 +501,22 @@ async function main() {
         }
         process.exit(1);
     }
-    
-    const extractDir = path.join(path.dirname(workingAsarPath), 'app-extracted-codex-rtl-temp');
+
+    const originalHeader = asar.getRawHeader(workingAsarPath).header;
+    const { options: packOptions } = createPackOptionsFromHeader(originalHeader);
+    const originalUnpackedFiles = listUnpackedFilesFromHeader(originalHeader);
+    const extractDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-rtl-extract-'));
+    const newAsarPath = path.join(
+        path.dirname(workingAsarPath),
+        `.app.asar.codex-rtl-${process.pid}.tmp`
+    );
+    const newUnpackedPath = `${newAsarPath}.unpacked`;
+
     spinner.text = 'Extracting app.asar (this may take a few seconds)...';
     try {
-        if (fs.existsSync(extractDir)) {
-            fs.rmSync(extractDir, { recursive: true, force: true });
-        }
         asar.extractAll(workingAsarPath, extractDir);
     } catch (e) {
+        fs.rmSync(extractDir, { recursive: true, force: true });
         spinner.fail('Failed to extract ASAR.');
         console.error(red(e.message));
         if (e.code === 'ENOENT' && !fs.existsSync(workingAsarPath + '.unpacked')) {
@@ -348,14 +528,12 @@ async function main() {
 
     spinner.text = 'Injecting RTL features and enabling DevTools...';
     try {
-        const buildDir = path.join(extractDir, '.vite', 'build');
-        if (!fs.existsSync(buildDir)) {
-            throw new Error('.vite/build not found in ASAR. Unsupported Codex version.');
-        }
+        const entryPath = resolveArchiveEntryPoint(extractDir, manifest);
+        const buildDir = path.dirname(entryPath);
 
         // 1. Find main-*.js
         const files = fs.readdirSync(buildDir);
-        const mainFiles = files.filter(f => f.startsWith('main-') && f.endsWith('.js'));
+        const mainFiles = files.filter(file => /^main(?:-[A-Za-z0-9_-]+)?\.js$/.test(file));
         
         for (const mainFile of mainFiles) {
             const mainJsPath = path.join(buildDir, mainFile);
@@ -369,19 +547,14 @@ async function main() {
             }
         }
 
-        // 2. Inject RTL Loader into bootstrap.js
-        const bootstrapPath = path.join(buildDir, 'bootstrap.js');
-        if (!fs.existsSync(bootstrapPath)) {
-            throw new Error('.vite/build/bootstrap.js not found in ASAR. Unsupported Codex version.');
-        }
-
-        let bootstrapCode = fs.readFileSync(bootstrapPath, 'utf8');
+        // 2. Inject the RTL loader into the manifest-defined main entry point.
+        let entryCode = fs.readFileSync(entryPath, 'utf8');
         
-        if (bootstrapCode.includes('/* CODEX RTL PATCH START */')) {
-            spinner.succeed('Codex is already patched!');
+        if (entryCode.includes('/* CODEX RTL PATCH START */')) {
+            spinner.succeed('ChatGPT/Codex is already patched!');
             fs.rmSync(extractDir, { recursive: true, force: true });
             console.log(green('\n✨ Enjoy your RTL experience!\n'));
-            process.exit(0);
+            return;
         }
 
         const loaderCode = `
@@ -402,10 +575,17 @@ try {
             }
         });
 
-        win.webContents.on('console-message', (ev, level, message) => {
+        win.webContents.on('console-message', (detailsOrEvent, legacyLevel, legacyMessage) => {
+            const message = typeof legacyMessage === 'string'
+                ? legacyMessage
+                : typeof legacyLevel?.message === 'string'
+                    ? legacyLevel.message
+                    : typeof detailsOrEvent?.message === 'string'
+                        ? detailsOrEvent.message
+                        : null;
             if (typeof message === 'string' && message.startsWith('SAVE_RTL_CONFIG|')) {
                 try {
-                    const data = message.substring(16);
+                    const data = message.substring('SAVE_RTL_CONFIG|'.length);
                     const configPath = require('path').join(require('os').homedir(), '.codex-rtl.json');
                     require('fs').writeFileSync(configPath, data);
                 } catch (e) {}
@@ -414,6 +594,10 @@ try {
         
         win.webContents.on('dom-ready', () => {
             try {
+                const currentUrl = win.webContents.getURL() || '';
+                const isInternalAppPage = currentUrl.startsWith('app://-/') || currentUrl.startsWith('file://');
+                if (currentUrl && !isInternalAppPage) return;
+
                 const title = win.getTitle() || '';
                 if (title.startsWith('Pet Surface') || title === 'Dictation') return;
                 if (!win.isResizable() || (typeof win.isFocusable === 'function' && !win.isFocusable())) {
@@ -442,6 +626,11 @@ try {
                 // Replace placeholders in payload
                 payload = payload.replace('__FONT_BASE64__', fontBase64);
                 payload = payload.replace('__RTL_CONFIG__', JSON.stringify(rtlConfig));
+                payload = [
+                    '(() => { if (globalThis.__codexRtlPatched) return; globalThis.__codexRtlPatched = true; try {',
+                    payload,
+                    '} catch (error) { delete globalThis.__codexRtlPatched; throw error; } })()'
+                ].join(String.fromCharCode(10));
 
                 win.webContents.executeJavaScript(payload).catch(err => console.error("Failed to inject RTL:", err));
             } catch (e) {
@@ -455,9 +644,8 @@ try {
 /* CODEX RTL PATCH END */
 `;
 
-        // Append loader to bootstrap.js
-        bootstrapCode += '\n' + loaderCode;
-        fs.writeFileSync(bootstrapPath, bootstrapCode, 'utf8');
+        entryCode += '\n' + loaderCode;
+        fs.writeFileSync(entryPath, entryCode, 'utf8');
 
         // 3. Copy font file
         const fontSource = path.join(__dirname, 'Vazirmatn-Variable.woff2');
@@ -482,9 +670,26 @@ try {
 
     spinner.text = 'Repacking app.asar (almost done)...';
     try {
-        await asar.createPackage(extractDir, workingAsarPath);
-        fs.rmSync(extractDir, { recursive: true, force: true });
-        spinner.succeed('Successfully patched Codex!');
+        fs.rmSync(newAsarPath, { force: true });
+        fs.rmSync(newUnpackedPath, { recursive: true, force: true });
+        await asar.createPackageWithOptions(extractDir, newAsarPath, packOptions);
+
+        const repackedUnpackedFiles = listUnpackedFiles(newAsarPath);
+        if (
+            repackedUnpackedFiles.length !== originalUnpackedFiles.length ||
+            repackedUnpackedFiles.some((file, index) => file !== originalUnpackedFiles[index])
+        ) {
+            throw new Error(
+                `Repacked ASAR changed unpacked file metadata ` +
+                `(${originalUnpackedFiles.length} original files, ${repackedUnpackedFiles.length} repacked files).`
+            );
+        }
+
+        // The existing app.asar.unpacked remains canonical. The temporary copy was
+        // only needed so @electron/asar could reproduce the original header flags.
+        fs.rmSync(newUnpackedPath, { recursive: true, force: true });
+        replaceArchiveWithRollback(newAsarPath, workingAsarPath, backupPath);
+        spinner.succeed('Successfully patched ChatGPT/Codex!');
         
         if (isStore) {
             const storeDestDir = path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Codex-Patched');
@@ -501,12 +706,17 @@ try {
                 console.log(cyan(`  ${storeDestDir}\n`));
             }
         } else {
-            console.log(green('\n✨ RTL Features and DevTools have been enabled. Please restart Codex to see the changes.\n'));
+            console.log(green('\n✨ RTL Features and DevTools have been enabled. Please restart ChatGPT/Codex to see the changes.\n'));
         }
     } catch (e) {
         spinner.fail('Failed to repack ASAR.');
         console.error(red(e.message));
-        process.exit(1);
+        process.exitCode = 1;
+        return;
+    } finally {
+        fs.rmSync(extractDir, { recursive: true, force: true });
+        fs.rmSync(newAsarPath, { force: true });
+        fs.rmSync(newUnpackedPath, { recursive: true, force: true });
     }
 }
 
