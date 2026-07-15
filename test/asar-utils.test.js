@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { execFileSync, spawnSync } from 'node:child_process';
 import * as asar from '@electron/asar';
 import {
     computeAsarHeaderHash,
@@ -15,6 +16,12 @@ import {
     readArchiveManifest,
     resolveArchiveEntryPoint
 } from '../bin/asar-utils.js';
+import {
+    ensureMacBundleBackup,
+    hasOfficialSignature,
+    restoreMacBundleBackup,
+    signMacAppBundle
+} from '../bin/macos-signing.js';
 
 function temporaryDirectory(t) {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-rtl-test-'));
@@ -124,4 +131,56 @@ test('recognizes a macOS Info.plist next to Resources/app.asar', t => {
         path.join(contents, 'Info.plist')
     );
     assert.equal(getMacInfoPlistPath(path.join(root, 'app.asar')), null);
+});
+
+test('distinguishes an official macOS signature from an ad-hoc signature', () => {
+    assert.equal(hasOfficialSignature('Signature=adhoc\nTeamIdentifier=not set\n'), false);
+    assert.equal(hasOfficialSignature('Authority=Developer ID Application\nTeamIdentifier=2DC432GLL2\n'), true);
+});
+
+test('macOS signing and restore round-trip', { skip: process.platform !== 'darwin' }, t => {
+    const root = temporaryDirectory(t);
+    const app = path.join(root, 'Fixture.app');
+    const contents = path.join(app, 'Contents');
+    const resources = path.join(contents, 'Resources');
+    const executable = path.join(contents, 'MacOS', 'Fixture');
+    const asarPath = path.join(resources, 'app.asar');
+    const backupPath = path.join(root, 'backups', 'app.asar');
+    const originalPlist = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>Fixture</string>
+<key>CFBundleIdentifier</key><string>dev.codex-rtl.fixture</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+</dict></plist>`;
+
+    fs.mkdirSync(path.dirname(executable), { recursive: true });
+    fs.mkdirSync(resources, { recursive: true });
+    fs.mkdirSync(path.dirname(backupPath), { recursive: true });
+    fs.writeFileSync(path.join(contents, 'Info.plist'), originalPlist);
+    fs.copyFileSync('/usr/bin/true', executable);
+    fs.chmodSync(executable, 0o755);
+    fs.writeFileSync(asarPath, 'original archive');
+    execFileSync('/usr/bin/codesign', ['--force', '--sign', '-', app]);
+    fs.copyFileSync(asarPath, backupPath);
+    ensureMacBundleBackup(asarPath, backupPath);
+
+    fs.writeFileSync(asarPath, 'patched archive');
+    fs.appendFileSync(path.join(contents, 'Info.plist'), '\n');
+    signMacAppBundle(app);
+    const entitlementResult = spawnSync(
+        '/usr/bin/codesign',
+        ['--display', '--entitlements', ':-', app],
+        { encoding: 'utf8' }
+    );
+    assert.equal(entitlementResult.status, 0);
+    const entitlements = `${entitlementResult.stdout}${entitlementResult.stderr}`;
+    assert.match(entitlements, /com\.apple\.security\.cs\.allow-jit/);
+    assert.match(entitlements, /com\.apple\.security\.cs\.allow-unsigned-executable-memory/);
+    assert.match(entitlements, /com\.apple\.security\.cs\.disable-library-validation/);
+    assert.doesNotMatch(entitlements, /application-identifier|application-groups|keychain-access-groups/);
+    restoreMacBundleBackup(asarPath, backupPath);
+
+    assert.equal(fs.readFileSync(asarPath, 'utf8'), 'original archive');
+    assert.equal(fs.readFileSync(path.join(contents, 'Info.plist'), 'utf8'), originalPlist);
 });

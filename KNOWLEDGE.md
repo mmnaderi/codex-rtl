@@ -21,6 +21,8 @@ The inspected ChatGPT release also contains 639 unpacked files used by native de
 
 Backups must live outside the signed `.app` bundle. Versioned backups are stored under `~/.codex-rtl/backups/`.
 
+On macOS, changing the ASAR or `Info.plist` invalidates the outer application seal. The patcher therefore saves the original `Info.plist`, main executable, and `_CodeSignature`, then ad-hoc signs only the outer bundle. It preserves the identifier and hardened-runtime metadata, but replaces the official Team-bound entitlements with the three runtime permissions the modified Electron host needs: JIT, unsigned executable memory, and disabled library validation. The last permission is required because the ad-hoc main executable must load the still-officially-signed OpenAI framework. Nested helpers keep their original signatures; `codesign --deep` is used for verification, never signing. Restore puts the four original artifacts back and verifies the official bundle.
+
 ---
 
 ## Developer Settings & Features Activation

@@ -76,6 +76,7 @@ This CLI tool:
 3. Reads the real Electron entry point from `package.json` instead of assuming a fixed bootstrap filename.
 4. Preserves native `app.asar.unpacked` metadata while injecting the Smart RTL Engine.
 5. On macOS, updates `ElectronAsarIntegrity` to match the repacked archive header.
+6. On macOS, preserves the official bundle files needed for restore, re-signs only the outer app bundle ad-hoc, and verifies the complete bundle. An already broken or ad-hoc app must be reinstalled before patching.
 
 ## Contributing
 
@@ -161,6 +162,7 @@ npx codex-rtl --restore
 3. entry point واقعی Electron را از `package.json` می‌خواند.
 4. هنگام repack، metadata ماژول‌های native را حفظ می‌کند.
 5. در macOS، مقدار `ElectronAsarIntegrity` را با hash آرشیو جدید هماهنگ می‌کند.
+6. در macOS، فایل‌های لازم برای restore امضای رسمی را نگه می‌دارد، فقط bundle بیرونی را به‌صورت ad-hoc امضا و کل bundle را verify می‌کند. اپی که از قبل امضای خراب یا ad-hoc دارد باید پیش از patch دوباره نصب شود.
 
 ## مشارکت در توسعه
 

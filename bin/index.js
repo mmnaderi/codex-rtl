@@ -20,6 +20,13 @@ import {
     readArchiveManifest,
     resolveArchiveEntryPoint
 } from './asar-utils.js';
+import {
+    assertOfficialMacAppBundle,
+    ensureMacBundleBackup,
+    getMacAppBundlePath,
+    restoreMacBundleBackup,
+    signMacAppBundle
+} from './macos-signing.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -276,11 +283,6 @@ async function getAsarPath() {
     return { path: response.customPath, isStore };
 }
 
-function getMacAppBundlePath(asarPath) {
-    const infoPlist = getMacInfoPlistPath(asarPath);
-    return infoPlist ? path.dirname(path.dirname(infoPlist)) : null;
-}
-
 function assertMacAppIsNotRunning(asarPath) {
     if (os.platform() !== 'darwin') return;
     const appBundle = getMacAppBundlePath(asarPath);
@@ -386,13 +388,17 @@ function findRestoreBackup(asarPath, manifest) {
 }
 
 function replaceArchiveWithRollback(newAsarPath, targetAsarPath, backupPath) {
+    const appBundle = os.platform() === 'darwin' ? getMacAppBundlePath(targetAsarPath) : null;
     try {
         moveFileIntoPlace(newAsarPath, targetAsarPath);
         setMacAsarIntegrity(targetAsarPath);
+        if (appBundle) signMacAppBundle(appBundle);
     } catch (error) {
         try {
-            fs.copyFileSync(backupPath, targetAsarPath);
-            setMacAsarIntegrity(targetAsarPath, backupPath);
+            if (!restoreMacBundleBackup(targetAsarPath, backupPath)) {
+                fs.copyFileSync(backupPath, targetAsarPath);
+                setMacAsarIntegrity(targetAsarPath, backupPath);
+            }
         } catch (rollbackError) {
             error.message += ` Rollback also failed: ${rollbackError.message}`;
         }
@@ -431,12 +437,14 @@ async function main() {
                 console.error(red('✖ No backup found to restore.\n'));
                 process.exit(1);
             }
-            const spinner = ora('Restoring original app.asar...').start();
+            const spinner = ora('Restoring original ChatGPT/Codex files...').start();
             const restoreTempPath = `${asarPath}.codex-rtl-restore-${process.pid}`;
             try {
-                fs.copyFileSync(backupPath, restoreTempPath);
-                moveFileIntoPlace(restoreTempPath, asarPath);
-                setMacAsarIntegrity(asarPath, backupPath);
+                if (!restoreMacBundleBackup(asarPath, backupPath)) {
+                    fs.copyFileSync(backupPath, restoreTempPath);
+                    moveFileIntoPlace(restoreTempPath, asarPath);
+                    setMacAsarIntegrity(asarPath, backupPath);
+                }
                 spinner.succeed('Successfully restored original ChatGPT/Codex!\n');
                 process.exit(0);
             } catch (e) {
@@ -482,6 +490,17 @@ async function main() {
 
     assertMacAppIsNotRunning(workingAsarPath);
 
+    const appBundle = os.platform() === 'darwin' ? getMacAppBundlePath(workingAsarPath) : null;
+    if (appBundle) {
+        try {
+            assertOfficialMacAppBundle(appBundle);
+        } catch (e) {
+            console.error(red('\n✖ The ChatGPT/Codex signature is not a valid official signature.'));
+            console.error(yellow(`${e.message}\n`));
+            process.exit(1);
+        }
+    }
+
     const spinner = ora('Checking permissions and backing up...').start();
     let backupPath;
     try {
@@ -489,14 +508,21 @@ async function main() {
         const infoPlist = getMacInfoPlistPath(workingAsarPath);
         if (infoPlist) fs.accessSync(infoPlist, fs.constants.W_OK);
         backupPath = ensureExternalBackup(workingAsarPath, manifest);
+        if (appBundle) {
+            if (computeAsarHeaderHash(backupPath) !== computeAsarHeaderHash(workingAsarPath)) {
+                throw new Error(`Existing backup does not match the official app: ${backupPath}`);
+            }
+            ensureMacBundleBackup(workingAsarPath, backupPath);
+        }
     } catch (e) {
-        spinner.fail('Permission Denied.');
+        const isPermissionError = e.code === 'EACCES' || e.code === 'EPERM';
+        spinner.fail(isPermissionError ? 'Permission Denied.' : 'Backup failed.');
         console.error(red('\nSystem Error: ' + e.message));
-        if (os.platform() === 'win32') {
+        if (isPermissionError && os.platform() === 'win32') {
             console.error(yellow('\nPlease run your terminal (PowerShell/CMD) as Administrator and try again.\n'));
-        } else if (os.platform() === 'darwin') {
+        } else if (isPermissionError && os.platform() === 'darwin') {
             handleMacPermissionError(e);
-        } else {
+        } else if (isPermissionError) {
             console.error(yellow('\nPlease run this command with sudo.\n'));
         }
         process.exit(1);
