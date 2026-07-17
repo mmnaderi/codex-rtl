@@ -41,6 +41,39 @@
         var WRITING_SEL = '[contenteditable="true"], [data-lexical-editor="true"], textarea';
         var EDITOR_SEL = WRITING_SEL + ', [contenteditable=""], [contenteditable="plaintext-only"], [data-lexical-text="true"], .ProseMirror, [role="textbox"]';
 
+        // Codex is a natively LTR app; only the conversation should flip. Confine
+        // ALL direction work to the message thread (.thread-scroll-container) plus
+        // the composer, so the app's own chrome -- sidebar (aside.app-shell-left-panel),
+        // navigation, top menus, toolbars -- stays in its native LTR. Chrome must
+        // stay LTR to match the window-controls fix.
+        var CONVERSATION_SEL = '.thread-scroll-container';
+        // Chrome we must never touch even via the global composer/input pass.
+        var CHROME_SEL = 'aside, nav, [role="navigation"], [role="menubar"], [role="toolbar"], header';
+
+        // The live conversation roots. Falls back to the largest vertical scroller
+        // (then <body>) so a future class rename degrades instead of breaking.
+        function conversationRoots() {
+            var roots = Array.prototype.slice.call(document.querySelectorAll(CONVERSATION_SEL));
+            if (roots.length) return roots;
+            var best = null, bestH = 0;
+            var els = document.querySelectorAll('main, section, div');
+            for (var i = 0; i < els.length; i++) {
+                var e = els[i];
+                if (e.closest(CHROME_SEL)) continue;
+                if (e.scrollHeight > e.clientHeight + 60) {
+                    var s = window.getComputedStyle(e);
+                    if (/auto|scroll/.test(s.overflowY) && e.scrollHeight > bestH) { best = e; bestH = e.scrollHeight; }
+                }
+            }
+            return best ? [best] : [document.body];
+        }
+
+        // True if the node sits inside the conversation thread.
+        function inConversation(node) {
+            var el = (node && node.nodeType === 1) ? node : (node ? node.parentElement : null);
+            return !!(el && el.closest && el.closest(CONVERSATION_SEL));
+        }
+
         // --- PURE DETECTION CORE (inlined from src/rtl-core.cjs by build-payload.mjs) ---
         // >>> inlined src/rtl-core.cjs >>>
         // rtl-core.js -- pure, DOM-free RTL/LaTeX detection logic.
@@ -591,6 +624,9 @@
 
         function processInput() {
             document.querySelectorAll(WRITING_SEL).forEach(function (input) {
+                // The composer is the only rich-text input we direct. Never touch
+                // inputs that live in the app chrome (e.g. sidebar search).
+                if (input.closest(CHROME_SEL)) return;
                 var text = input.textContent || input.innerText || input.value || '';
                 var dir = detectTextDir(text);
                 if (dir === 'rtl') {
@@ -603,12 +639,15 @@
 
         function processAll() {
             if (!rtlEnabled) return;
-            isolateMath(document.body);
-            processText(document);
-            processContainers(document.body);
-            processTables(document.body);
-            processInput();
-            forceCodeLTR(document.body);
+            // Scope every pass to the conversation thread; leave app chrome LTR.
+            conversationRoots().forEach(function (root) {
+                isolateMath(root);
+                processText(root);
+                processContainers(root);
+                processTables(root);
+                forceCodeLTR(root);
+            });
+            processInput(); // composer lives outside the thread scroller
         }
 
         // Baseline stylesheet: passive plaintext for un-dir'd text, code/math LTR,
@@ -618,21 +657,29 @@
             if (document.getElementById('codex-rtl-baseline')) return;
             var s = document.createElement('style');
             s.id = 'codex-rtl-baseline';
-            // Broad plaintext net on prose. Codex renders chat text in div/span
-            // (not semantic <p>), so span/div/[role="presentation"] MUST be
-            // included or conversation text never auto-directs. The rules below
-            // that protect code/islands/tables come AFTER this and win on
-            // specificity ([data-rtl-island] > span) or later cascade order
-            // (pre code descendants), so isolation still overrides plaintext.
+            // Broad plaintext net on prose, but SCOPED to the conversation thread
+            // (C) so the app chrome stays LTR. Codex renders chat text in div/span
+            // (not semantic <p>), so span/div/[role="presentation"] must be included
+            // or conversation text never auto-directs. The composer (a rich-text
+            // editor outside the thread scroller) is covered by its own rule. The
+            // code/island/table rules come AFTER and win on specificity
+            // ([data-rtl-island] > span) or later cascade order (pre code
+            // descendants), so isolation still overrides plaintext.
+            var C = CONVERSATION_SEL + ' ';
+            var prose = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'span', 'div', '[role="presentation"]']
+                .map(function (t) { return C + t; }).join(',');
+            var codeSel = [C + 'pre', C + '.code-block__code', C + 'pre *', C + 'code *', C + 'pre span', C + 'code span', C + '[data-line] span'].join(',');
             s.textContent = [
-                'p,h1,h2,h3,h4,h5,h6,li,span,div,[role="presentation"]{unicode-bidi:plaintext!important;text-align:start!important}',
+                prose + '{unicode-bidi:plaintext!important;text-align:start!important}',
+                // Composer input (rich-text editor, lives outside the thread scroller).
+                '[contenteditable="true"] p,[data-lexical-text="true"]{unicode-bidi:plaintext!important;text-align:start!important}',
                 '.rtl-widget-container,.rtl-widget-container *{direction:ltr!important;text-align:left!important;unicode-bidi:isolate!important}',
-                'pre:not(.rtl-widget-container *),.code-block__code,pre:not(.rtl-widget-container *) *,code:not(.rtl-widget-container *) *,pre span,code span,[data-line] span{unicode-bidi:isolate!important;direction:ltr!important;text-align:left!important}',
-                'code:not(.rtl-widget-container *){unicode-bidi:isolate!important;direction:ltr!important}',
+                codeSel + '{unicode-bidi:isolate!important;direction:ltr!important;text-align:left!important}',
+                C + 'code{unicode-bidi:isolate!important;direction:ltr!important}',
                 '[data-rtl-island]{unicode-bidi:isolate!important;direction:ltr!important;text-align:left!important}',
-                '.katex,.katex-display,mjx-container{unicode-bidi:isolate!important;direction:ltr!important}',
-                'table[dir="rtl"]{direction:rtl!important}',
-                'ul:not(#_)[dir="rtl"],ol:not(#_)[dir="rtl"],[dir="rtl"] ul:not(#_),[dir="rtl"] ol:not(#_){padding-left:0!important;padding-right:1.25rem!important}'
+                C + '.katex,' + C + '.katex-display,' + C + 'mjx-container{unicode-bidi:isolate!important;direction:ltr!important}',
+                C + 'table[dir="rtl"]{direction:rtl!important}',
+                C + 'ul[dir="rtl"],' + C + 'ol[dir="rtl"],' + C + '[dir="rtl"] ul,' + C + '[dir="rtl"] ol{padding-left:0!important;padding-right:1.25rem!important}'
             ].join('');
             document.head.appendChild(s);
         }
@@ -690,23 +737,27 @@
             var enFontStr = savedEnFont ? "'" + savedEnFont + "', ui-sans-serif, system-ui, sans-serif" : 'ui-sans-serif, system-ui, sans-serif';
             var codeFontStr = savedCodeFont ? "'" + savedCodeFont + "', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" : 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
 
-            var forceRtlStyle = forceRTL ? [
-                'p:not(.rtl-widget-container *),li:not(.rtl-widget-container *),',
-                'h1:not(.rtl-widget-container *),h2:not(.rtl-widget-container *),h3:not(.rtl-widget-container *),',
-                'h4:not(.rtl-widget-container *),h5:not(.rtl-widget-container *),h6:not(.rtl-widget-container *),',
-                'textarea:not(.rtl-widget-container *),[contenteditable="true"]:not(.rtl-widget-container *),',
-                '[contenteditable="true"] p:not(.rtl-widget-container *),[data-lexical-text="true"]:not(.rtl-widget-container *)',
+            // Everything the dynamic sheet does is scoped to the conversation (C)
+            // plus the composer, so fonts / line-height / Force-RTL never touch the
+            // app's own LTR chrome.
+            var C = CONVERSATION_SEL + ' ';
+            var COMPOSER = '[contenteditable="true"] p,[data-lexical-text="true"],[contenteditable="true"]';
+
+            var forceRtlStyle = forceRTL ? (
+                [C + 'p', C + 'li', C + 'h1', C + 'h2', C + 'h3', C + 'h4', C + 'h5', C + 'h6', COMPOSER].join(',') +
                 '{direction:rtl!important;text-align:right!important;unicode-bidi:isolate!important;}'
-            ].join('') : '';
+            ) : '';
 
             rtlStyle.textContent = [
                 faFontRule,
                 "@font-face{font-family:'PersianOnlyFont';src:url('data:font/woff2;base64," + fontBase64 + "') format('woff2');font-weight:100 900;unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF;}",
-                ':root,:host,html,body{font-family:' + faFontName + ',' + enFontStr + ',"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"!important;--diffs-font-family:' + codeFontStr + '!important;--diffs-font-fallback:' + codeFontStr + '!important;}',
+                // Font scoped to the conversation + composer (not :root), so chrome keeps its own font.
+                CONVERSATION_SEL + ',' + CONVERSATION_SEL + ' *,' + COMPOSER + '{font-family:' + faFontName + ',' + enFontStr + ',"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"!important;}',
+                ':root{--diffs-font-family:' + codeFontStr + '!important;--diffs-font-fallback:' + codeFontStr + '!important;}',
                 '.rtl-widget-container,.rtl-widget-container *{direction:ltr!important;text-align:left!important;unicode-bidi:isolate!important;}',
                 forceRtlStyle,
-                'pre:not(.rtl-widget-container *),code:not(.rtl-widget-container *),pre:not(.rtl-widget-container *) *,code:not(.rtl-widget-container *) *,[data-line] span{font-family:' + codeFontStr + '!important;}',
-                'p:not(.rtl-widget-container *),li:not(.rtl-widget-container *),h1:not(.rtl-widget-container *),h2:not(.rtl-widget-container *),h3:not(.rtl-widget-container *),[contenteditable="true"] p:not(.rtl-widget-container *),[data-lexical-text="true"]:not(.rtl-widget-container *){line-height:' + savedLH + '!important;}'
+                C + 'pre,' + C + 'code,' + C + 'pre *,' + C + 'code *,' + C + '[data-line] span{font-family:' + codeFontStr + '!important;}',
+                [C + 'p', C + 'li', C + 'h1', C + 'h2', C + 'h3', '[contenteditable="true"] p', '[data-lexical-text="true"]'].join(',') + '{line-height:' + savedLH + '!important;}'
             ].join('\n');
 
             if (!rtlStyle.parentNode) document.head.appendChild(rtlStyle);
@@ -731,6 +782,9 @@
                     var m = muts[i];
                     if (m.addedNodes.length === 0 && m.type !== 'characterData') continue;
                     if (mutInsideEditor(m)) continue;
+                    // Only react to mutations inside the conversation thread -- app
+                    // chrome (sidebar, menus) must stay LTR and never be reprocessed.
+                    if (!inConversation(m.target)) continue;
                     // Ignore our own widget's mutations.
                     var tgt = m.target;
                     var tel = (tgt && tgt.nodeType === 1) ? tgt : (tgt ? tgt.parentElement : null);
