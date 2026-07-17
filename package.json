@@ -11,7 +11,10 @@
     "README.md"
   ],
   "scripts": {
-    "test": "node --test"
+    "build": "node tools/build-payload.mjs",
+    "pretest": "node tools/build-payload.mjs",
+    "test": "node --test",
+    "prepublishOnly": "node tools/build-payload.mjs"
   },
   "repository": {
     "type": "git",
@@ -39,6 +42,9 @@
     "ora": "^9.4.1",
     "picocolors": "^1.1.1",
     "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
   },
   "type": "module"
 }
