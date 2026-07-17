@@ -670,7 +670,30 @@ try {
 /* CODEX RTL PATCH END */
 `;
 
-        entryCode += '\n' + loaderCode;
+        // Main-process switch (NOT the renderer payload). Runs at the very top of
+        // the Electron entry, before app 'ready'. It forces Chromium's UI direction
+        // to LTR, which fixes the native window chrome on RTL OS locales (e.g.
+        // Arabic Windows): the title-bar controls (minimize/maximize/close) get
+        // mirrored onto the app's own buttons and the menu bar (File/Edit/View)
+        // lands on the wrong side. Root cause: with an RTL OS locale Chromium draws
+        // native child windows with WS_EX_LAYOUTRTL (X-axis mirroring); the app
+        // sets no UI direction, so this switch is the override. Kept tiny/DOM-free.
+        const mainSwitch = `/* CODEX RTL MAIN PATCH START */
+try {
+    if (!global.__codexRtlMainPatched) {
+        global.__codexRtlMainPatched = true;
+        const { app } = require('electron');
+        if (app && app.commandLine && typeof app.commandLine.appendSwitch === 'function') {
+            app.commandLine.appendSwitch('force-ui-direction', 'ltr');
+        }
+    }
+} catch (e) { try { console.error('Codex RTL main patch failed:', e); } catch (_) {} }
+/* CODEX RTL MAIN PATCH END */
+`;
+
+        // Prepend the UI-direction switch (must be set before app 'ready'); append
+        // the window/payload loader.
+        entryCode = mainSwitch + '\n' + entryCode + '\n' + loaderCode;
         fs.writeFileSync(entryPath, entryCode, 'utf8');
 
         // 3. Copy font file
