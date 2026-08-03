@@ -288,7 +288,7 @@ function assertMacAppIsNotRunning(asarPath) {
     const appBundle = getMacAppBundlePath(asarPath);
     if (!appBundle) return;
     try {
-        execFileSync('/usr/bin/pgrep', ['-f', `${appBundle}/Contents/`], { stdio: 'ignore' });
+        execFileSync('/usr/bin/pgrep', ['-f', `${appBundle}/Contents/MacOS/`], { stdio: 'ignore' });
         throw new Error(`Please quit ${path.basename(appBundle, '.app')} before patching or restoring it.`);
     } catch (error) {
         if (error.status === 1) return;

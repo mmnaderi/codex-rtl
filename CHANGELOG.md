@@ -2,6 +2,12 @@
 
 All notable changes to Codex Smart RTL are documented here.
 
+## [1.6.1] - 2026-08-03
+
+### Fixed
+
+- Fixed a false-positive "Please quit ChatGPT before patching" error on macOS caused by the orphaned `codex app-server` helper process. The running-app check now only matches the main Electron process (`Contents/MacOS/`), not unrelated helper binaries under `Contents/Resources/`.
+
 ## [1.6.0] - 2026-08-03
 
 ### Added
