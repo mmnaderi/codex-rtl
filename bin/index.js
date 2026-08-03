@@ -229,7 +229,7 @@ function createWindowsShortcut(exePath, destDir) {
         // Escape single quotes for PowerShell
         const escapedScript = script.replace(/'/g, "''");
         
-        execSync(`powershell -Command "${escapedScript}"`, { stdio: 'ignore' });
+        execFileSync('powershell', ['-Command', escapedScript], { stdio: 'ignore' });
         return shortcutPath;
     } catch (e) {
         return null;
