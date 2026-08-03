@@ -1,4 +1,7 @@
+<a id="english"></a>
 # ChatGPT/Codex Smart RTL & UI Patcher
+
+**English** · [العربية](#arabic) · [فارسی](#persian)
 
 A smart RTL (Right-to-Left) patcher for the ChatGPT desktop app with Codex, as well as legacy standalone Codex installations. It brings polished support for Persian (Farsi), Arabic, Hebrew, and other RTL languages.
 
@@ -78,15 +81,119 @@ This CLI tool:
 5. On macOS, updates `ElectronAsarIntegrity` to match the repacked archive header.
 6. On macOS, preserves the official bundle files needed for restore, re-signs only the outer app bundle ad-hoc, and verifies the complete bundle. An already broken or ad-hoc app must be reinstalled before patching.
 
+## Development
+
+The injected browser payload is assembled from source modules, so edits go in `src/`, not the generated `bin/payload.js`:
+
+- `src/rtl-core.cjs` — pure, DOM-free detection engine (script ranges, LaTeX/arithmetic isolation, table direction). Unit-tested.
+- `src/rtl-payload.js` — the DOM layer (observer, per-element direction, math islands, conversation scoping).
+- `src/rtl-widget.js` — the floating settings panel.
+- `tools/build-payload.mjs` — assembles the above into `bin/payload.js`.
+
+```bash
+npm run build   # regenerate bin/payload.js from src/
+npm test        # rebuild, then run unit + jsdom payload smoke tests
+```
+
+`npm test` runs the pure-logic unit tests **and** a jsdom smoke test that executes the fully assembled payload against a mock DOM — this catches assembly/scope/substitution regressions that unit tests alone cannot. Please keep it green when adding enhancements.
+
 ## Contributing
 
 Feel free to open issues or submit pull requests. Let's make Codex accessible and beautiful for everyone!
 
 ---
 
+<a id="arabic"></a>
+
+<div dir="rtl">
+
+# مُصحِّح ChatGPT/Codex الذكي لدعم الكتابة من اليمين إلى اليسار
+
+[English](#english) · **العربية** · [فارسی](#persian)
+
+مُصحِّح ذكي لدعم الكتابة من اليمين إلى اليسار (RTL) لتطبيق ChatGPT لسطح المكتب المدمج مع Codex، وكذلك نسخ Codex المستقلة القديمة؛ يجلب دعمًا متقنًا للعربية والفارسية والعبرية وغيرها من اللغات التي تُكتب من اليمين إلى اليسار.
+
+يقوم Codex Smart RTL بحقن محرك RTL داخل التطبيق، ويعالج مشكلات الكتابة المختلطة الاتجاه، ويُصحِّح أزرار التحكم الأصلية بالنافذة على أنظمة RTL، ويضيف لوحة إعدادات صغيرة للخطوط وارتفاع السطر والتخطيط.
+
+## المميزات
+
+- **الاتجاه التلقائي الذكي**: يكتشف تلقائيًا ما إذا كانت الفقرة عربية/RTL أو إنجليزية/LTR ويضبط محاذاتها بدقة — حتى أثناء وصول الرد المتدفق.
+- **بقاء المعادلات والشيفرة قابلة للقراءة**: تُعزل العمليات الحسابية المجردة (`2 + 3 = 5`) ومعادلات LaTeX (`$x^2$`) من اليسار إلى اليمين داخل النص العربي بدلًا من انعكاسها، وتبقى كتل الشيفرة دائمًا LTR.
+- **جداول من اليمين إلى اليسار**: تُقلَب الجداول العربية/العبرية لتُقرأ من اليمين إلى اليسار مع احتفاظ كل خلية باتجاهها.
+- **إصلاح أزرار النافذة**: على نظام ويندوز بلغة عربية/RTL، تنعكس أزرار شريط العنوان (تصغير/تكبير/إغلاق) وشريط القوائم إلى الجهة الخاطئة؛ تُعيد الأداة إطار النافذة إلى LTR دون التأثير على اتجاه نص المحادثة.
+- **الحصر داخل المحادثة**: يُطبَّق الاتجاه RTL داخل المحادثة فقط، بينما يبقى الشريط الجانبي والقوائم وأشرطة الأدوات باتجاه LTR الأصلي للتطبيق.
+- **وضع RTL الإجباري**: تريد محاذاة كل شيء إلى اليمين؟ فعِّل المفتاح فقط.
+- **خطوط مخصّصة**: حدِّد خطوطًا مختلفة للنص العربي، والنص الإنجليزي، وكتل الشيفرة.
+- **التحكم في ارتفاع السطر**: شريط تمرير دقيق لضبط ارتفاع السطر.
+- **إصلاح لوحة المفاتيح الفارسية**: يحوّل `Shift + 2` ليكتب `@` بدلًا من `٬`.
+- **لوحة إعدادات أنيقة**: عنصر واجهة عائم في الزاوية السفلية اليمنى.
+- **خط Vazirmatn مضمَّن**، و**توافق مع سمة التطبيق**.
+
+## التثبيت
+
+لا حاجة لتنزيل أي ملفات يدويًا. ثبِّت Node.js أولًا، ثم شغِّل الأمر الخاص بنظام تشغيلك.
+
+تُفضِّل الأداة تلقائيًا حزمة `/Applications/ChatGPT.app` الحالية وتعود إلى `Codex.app` القديمة. أما `ChatGPT Classic.app` فليست هدفًا للتصحيح لأنها لا تستخدم أرشيف Electron `app.asar`.
+
+### ماك (macOS)
+```bash
+brew install node   # إن لم يكن Node.js مثبَّتًا
+npx codex-rtl
+```
+أغلق ChatGPT/Codex قبل تشغيل الأمر. ولتصحيح مسار غير قياسي صراحةً:
+```bash
+npx codex-rtl --asar "/full/path/to/app.asar"
+```
+> إذا ظهر خطأ "Permission Denied"، ستفتح الأداة صفحة App Management تلقائيًا؛ فعِّل مفتاح الطرفية ثم أعد المحاولة. لا حاجة إلى `sudo`.
+
+### لينكس (Linux)
+```bash
+sudo apt install nodejs npm   # تجاوزه إن كان مثبَّتًا
+sudo npx codex-rtl
+```
+
+### ويندوز (Windows)
+افتح **PowerShell** بصلاحيات **المسؤول**، ثم شغِّل:
+```powershell
+winget install OpenJS.NodeJS.LTS   # تجاوزه إن كان مثبَّتًا
+npx codex-rtl
+```
+
+> [!WARNING]
+> **تحديثات التطبيق:** يُعيد تحديث ChatGPT/Codex كتابة ملفاته الداخلية فيُزال التصحيح؛ أعد تشغيل الأمر بعد كل تحديث.
+
+## الاستعادة إلى الحالة الأصلية (إلغاء التثبيت)
+
+أغلق التطبيق ثم شغِّل الأمر مع الراية `--restore`:
+```bash
+npx codex-rtl --restore
+```
+*(على لينكس شغِّله مع `sudo`، وعلى ويندوز في طرفية بصلاحيات المسؤول)*
+
+## كيف تعمل الأداة؟
+
+1. تحدِّد مكان تثبيت ChatGPT/Codex أو Codex القديم.
+2. تحفظ نسخة احتياطية مُؤرَّخة خارج حزمة التطبيق المُوقَّعة في `~/.codex-rtl/backups/`.
+3. تقرأ نقطة دخول Electron الحقيقية من `package.json` بدل افتراض اسم ملف ثابت.
+4. تحافظ على بيانات `app.asar.unpacked` الأصلية أثناء حقن محرك RTL.
+5. على macOS، تُحدِّث `ElectronAsarIntegrity` ليطابق ترويسة الأرشيف المُعاد تحزيمه.
+6. على macOS، تحفظ ملفات الحزمة الرسمية اللازمة للاستعادة، وتوقِّع الحزمة الخارجية فقط توقيعًا ذاتيًا (ad-hoc)، ثم تتحقّق من الحزمة كاملةً.
+
+## المساهمة
+
+نرحّب بالمشكلات (Issues) وطلبات الدمج (Pull Requests). لنجعل Codex متاحًا وجميلًا للجميع!
+
+</div>
+
+---
+
+<a id="persian"></a>
+
 <div dir="rtl">
 
 # اصلاح‌کنندهٔ هوشمند راست‌به‌چپ در ChatGPT/Codex
+
+[English](#english) · [العربية](#arabic) · **فارسی**
 
 یک پچر هوشمند راست‌به‌چپ (RTL) برای اپ جدید ChatGPT که Codex در آن ادغام شده است، و نسخه‌های مستقل قدیمی Codex؛ با پشتیبانی از فارسی، عربی، عبری و دیگر زبان‌های RTL.
 
