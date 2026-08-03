@@ -85,7 +85,7 @@
         // .cjs file because package.json sets "type":"module" -- the CommonJS export at
         // the bottom is what the test loads and what the build tool strips.
         'use strict';
-        
+
         // Strong-RTL code-point ranges, [lo, hi] inclusive. Covers the modern living
         // RTL scripts plus the common historic/astral ones. Tested against code points
         // (codePointAt), NOT UTF-16 code units, so astral blocks like Adlam work.
@@ -112,7 +112,7 @@
             [0x1E900, 0x1E95F], // Adlam
             [0x1EE00, 0x1EEFF]  // Arabic Mathematical Alphabetic Symbols
         ];
-        
+
         // cp: a Unicode code point (from String.prototype.codePointAt).
         function isRTL(cp) {
             for (var i = 0; i < RTL_RANGES.length; i++) {
@@ -120,7 +120,7 @@
             }
             return false;
         }
-        
+
         function hasRTL(text) {
             if (!text) return false;
             for (var i = 0; i < text.length;) {
@@ -130,7 +130,7 @@
             }
             return false;
         }
-        
+
         // Direction of the first strong character: 'rtl', 'ltr', or null (no strong char).
         function firstStrong(text) {
             if (!text) return null;
@@ -143,7 +143,7 @@
             }
             return null;
         }
-        
+
         // Remove leading LTR-only noise (filenames, URLs, paths, backtick-code) so a
         // Hebrew/Persian sentence that starts with "foo.js" still detects as RTL.
         function stripLeadingLTR(text) {
@@ -153,22 +153,22 @@
                 .replace(/[\w.\-]+[\/\\][\w.\-\/\\]+/g, '')
                 .replace(/`[^`]+`/g, '');
         }
-        
+
         // A "$...$" body is treated as math only when it carries a real LaTeX signal.
         // This is the currency guard: "$5.99" or "$5 to $10" lack the signal and stay text.
         var LATEX_SIGNAL = /[\\^_{}]|\b(?:frac|sqrt|sum|prod|int|lim|infty|cdot|times|div|leq|geq|neq|approx|partial|nabla|alpha|beta|gamma|delta|theta|lambda|mu|pi|sigma|omega|matrix|begin|end|left|right|text|mathbb|mathcal|vec|hat|bar|overline|underline)\b/;
-        
+
         function hasLatexSignal(body) {
             return LATEX_SIGNAL.test(body);
         }
-        
+
         // Find math regions as [start, end) index pairs over `text`.
         // Unambiguous delimiters ($$...$$, \[...\], \(...\)) always count; single $...$
         // only counts with a LaTeX signal and only outside already-claimed regions.
         function findLatexRanges(text) {
             var ranges = [];
             if (!text) return ranges;
-        
+
             function claim(re, requireSignal, bodyStart, bodyEnd) {
                 var m;
                 re.lastIndex = 0;
@@ -189,18 +189,18 @@
                 }
                 return false;
             }
-        
+
             // Order matters: claim the unambiguous, greedier delimiters first.
             claim(/\$\$[\s\S]+?\$\$/g, false, 0, 0);
             claim(/\\\[[\s\S]+?\\\]/g, false, 0, 0);
             claim(/\\\([\s\S]+?\\\)/g, false, 0, 0);
             // Single $...$ -- no newline inside, must carry a LaTeX signal (currency guard).
             claim(/\$[^$\n]+?\$/g, true, 1, 1);
-        
+
             ranges.sort(function (a, b) { return a[0] - b[0]; });
             return ranges;
         }
-        
+
         // --- BARE NUMERIC / ARITHMETIC ISOLATION ---
         //
         // Assistants frequently write arithmetic WITHOUT LaTeX delimiters, e.g. a Persian
@@ -226,18 +226,18 @@
         // (x, y, n). Multi-letter Latin tokens (English words, "3D", "4K") are NOT
         // mathy, so they break a run and keep prose out of the isolated island.
         var MATH_TOKEN_RE = new RegExp('^(?:[0-9.,:;()\\[\\]{}|' + MATH_OP_CHARS + ']+|[A-Za-z])$');
-        
+
         function isMathyToken(tok) {
             return !!tok && MATH_TOKEN_RE.test(tok);
         }
-        
+
         // A token may BOUND a run only if it carries an operand -- a digit or a single
         // Latin variable letter. Pure operator/punctuation tokens ("+", "=", "(") can
         // sit inside a run but never start or end it (avoids dangling "+ 3").
         function isOperandToken(tok) {
             return MATH_DIGIT_RE.test(tok) || /^[A-Za-z]$/.test(tok);
         }
-        
+
         // Find bare numeric/arithmetic runs as [start, end) index pairs over `text`.
         // A run must be whitespace/line delimited, operand-bounded, and contain at least
         // one digit AND one operator. Lone numbers, "$5" currency, RTL-glued
@@ -246,7 +246,7 @@
         function findMathRanges(text) {
             var ranges = [];
             if (!text || !MATH_OP_RE.test(text) || !MATH_DIGIT_RE.test(text)) return ranges;
-        
+
             // Scan line by line so a run never spans a newline (each line is its own
             // bidi paragraph). `base` is the absolute offset of the current line.
             var base = 0;
@@ -256,7 +256,7 @@
                 base += lines[li].length + 1; // +1 for the '\n' removed by split
             }
             return ranges;
-        
+
             function scanLine(line, off) {
                 var toks = [];
                 var re = /\S+/g; // non-whitespace tokens; \s breaks them
@@ -290,7 +290,7 @@
                 }
             }
         }
-        
+
         // Split text into alternating {type:'text'|'math', value} segments. 'math' covers
         // both LaTeX islands (findLatexRanges) and bare arithmetic (findMathRanges); the
         // DOM layer isolates both LTR. LaTeX wins when the two overlap.
@@ -322,7 +322,7 @@
             if (pos < text.length) segs.push({ type: 'text', value: text.slice(pos) });
             return segs;
         }
-        
+
         // Classify a table cell's direction from its text. A cell counts as RTL if it
         // *contains* any RTL character -- not merely if its first strong char is RTL.
         // Header labels often start with a Latin term ("blob ...", "ID ...") yet belong
@@ -333,7 +333,7 @@
             if (firstStrong(text) === 'ltr') return 'ltr';
             return null;
         }
-        
+
         // Decide a whole table's column direction from header / first-column cell dirs.
         // Each input is an array of 'rtl' | 'ltr' | null. Header wins; first column is
         // the tie-breaker. Returns 'rtl' (flip columns) or null (leave LTR).
@@ -349,7 +349,7 @@
             var c = majorityDir(firstColDirs || []);
             return c === 'rtl' ? 'rtl' : null;
         }
-        
+
         function majorityDir(dirs) {
             var r = 0, l = 0;
             for (var i = 0; i < dirs.length; i++) {
@@ -881,7 +881,7 @@
         // and can read/write the state vars (rtlEnabled, forceRTL, savedFaFont, ...) and call
         // the lifecycle functions (startEngine, stopEngine, updateDynamicCSS, saveConfig)
         // directly. Do NOT wrap it in its own IIFE.
-        
+
         if (!document.getElementById('rtl-widget-style')) {
             var widgetStyle = document.createElement('style');
             widgetStyle.id = 'rtl-widget-style';
@@ -902,29 +902,29 @@
             ].join('');
             document.head.appendChild(widgetStyle);
         }
-        
+
         var widgetWrapper = document.createElement('div');
         widgetWrapper.className = 'rtl-widget-container';
         widgetWrapper.innerHTML = `
               <div class="rtl-widget-trigger">
                 <svg height="20" width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
               </div>
-        
+
               <div class="rtl-widget-panel">
                 <div class="relative flex max-h-full min-h-0 flex-col rounded-3xl bg-token-dropdown-background pt-3 border border-token-border-default shadow-md">
                   <div class="flex flex-col gap-2 px-3 pb-3 pt-0 w-full h-full" style="display: flex; flex-direction: column; gap: 8px;">
-        
+
                     <div class="border-b border-token-border-default pb-2 mb-1 text-center" style="text-align: center !important;">
                         <div class="electron:heading-lg heading-base truncate text-center" style="color: var(--color-token-foreground); display: flex !important; justify-content: center !important; text-align: center; width: 100%;">Codex Smart RTL</div>
                     </div>
-        
+
                     <div class="flex items-center justify-between gap-4 px-1" style="display: flex; justify-content: space-between; align-items: center;">
                       <span id="rtl-toggle-label" class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">${rtlEnabled ? 'Enabled' : 'Disabled'}</span>
                       <button id="rtl-toggle-btn" type="button" style="background-color: ${rtlEnabled ? 'var(--color-token-charts-blue, #339cff)' : '#555'}; border: none; cursor: pointer; height: 24px; width: 44px; border-radius: 9999px; position: relative;">
                         <span id="rtl-toggle-knob" style="margin-left: 4px; transform: ${rtlEnabled ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
                       </button>
                     </div>
-        
+
                     <div id="rtl-settings-wrapper" style="position: relative; z-index: 10; opacity: ${rtlEnabled ? '1' : '0.4'}; pointer-events: ${rtlEnabled ? 'auto' : 'none'}; display: flex; flex-direction: column; gap: 8px; transition: opacity 0.3s;">
                         <div class="flex items-center justify-between gap-2 px-1 mt-1" style="display: flex; justify-content: space-between; align-items: center;">
                           <div style="display: flex; align-items: center; gap: 4px;">
@@ -938,24 +938,24 @@
                             <span id="rtl-force-knob" style="margin-left: 4px; transform: ${forceRTL ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
                           </button>
                         </div>
-        
+
                         <div class="h-px bg-token-border-default w-full"></div>
-        
+
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                           <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">FA/AR Font</span>
                           <input id="rtl-fafont-input" type="text" placeholder="Default: Vazirmatn" value="${savedFaFont}" class="focus-visible:ring-token-focus h-7 w-full max-w-[8.5rem] rounded-lg border border-token-border bg-token-input-background px-2 text-xs text-token-text-primary shadow-sm outline-none focus-visible:ring-2 max-sm:max-w-none" spellcheck="false">
                         </div>
-        
+
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                           <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">EN Font</span>
                           <input id="rtl-enfont-input" type="text" placeholder="Default: System" value="${savedEnFont}" class="focus-visible:ring-token-focus h-7 w-full max-w-[8.5rem] rounded-lg border border-token-border bg-token-input-background px-2 text-xs text-token-text-primary shadow-sm outline-none focus-visible:ring-2 max-sm:max-w-none" spellcheck="false">
                         </div>
-        
+
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                           <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Code Font</span>
                           <input id="rtl-codefont-input" type="text" placeholder="Default: System" value="${savedCodeFont}" class="focus-visible:ring-token-focus h-7 w-full max-w-[8.5rem] rounded-lg border border-token-border bg-token-input-background px-2 text-xs text-token-text-primary shadow-sm outline-none focus-visible:ring-2 max-sm:max-w-none" spellcheck="false">
                         </div>
-        
+
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; height: 28px;">
                           <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Line Height</span>
                           <div style="display: flex; align-items: center; gap: 8px;">
@@ -963,9 +963,9 @@
                             <button id="rtl-lh-reset" type="button" class="text-token-text-primary opacity-50 hover:opacity-100 transition-opacity cursor-pointer text-sm" style="background: none; border: none; padding: 0;">↺</button>
                           </div>
                         </div>
-        
+
                         <div class="h-px bg-token-border-default w-full"></div>
-        
+
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                           <div style="display: flex; align-items: center; gap: 4px;">
                             <span class="font-medium text-xs" style="font-size: 12px; color: var(--color-token-foreground);">Type @ with Shift+2</span>
@@ -978,9 +978,9 @@
                             <span id="rtl-at-knob" style="margin-left: 4px; transform: ${fixAtSign ? 'translateX(20px)' : 'translateX(0)'}; transition: transform 0.2s; height: 16px; width: 16px; border-radius: 9999px; background: #fff; display: block;"></span>
                           </button>
                         </div>
-        
+
                         <div class="h-px bg-token-border-default w-full"></div>
-        
+
                         <a href="https://github.com/mmnaderi/codex-rtl" target="_blank" class="rtl-github-link">
                           <svg height="14" width="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg>
                           Star on GitHub
@@ -991,7 +991,7 @@
               </div>
         `;
         document.body.appendChild(widgetWrapper);
-        
+
         var _wToggleBtn = document.getElementById('rtl-toggle-btn');
         var _wToggleKnob = document.getElementById('rtl-toggle-knob');
         var _wToggleLabel = document.getElementById('rtl-toggle-label');
@@ -1005,7 +1005,7 @@
         var _wCodeFontInput = document.getElementById('rtl-codefont-input');
         var _wLhInput = document.getElementById('rtl-lh-input');
         var _wLhResetBtn = document.getElementById('rtl-lh-reset');
-        
+
         _wToggleBtn.addEventListener('click', function () {
             rtlEnabled = !rtlEnabled;
             saveConfig();
@@ -1016,7 +1016,7 @@
             _wToggleBtn.style.backgroundColor = rtlEnabled ? 'var(--color-token-charts-blue, #339cff)' : '#555';
             if (rtlEnabled) startEngine(); else stopEngine();
         });
-        
+
         _wForceBtn.addEventListener('click', function () {
             forceRTL = !forceRTL;
             saveConfig();
@@ -1024,38 +1024,38 @@
             _wForceBtn.style.backgroundColor = forceRTL ? 'var(--color-token-charts-blue, #339cff)' : '#555';
             updateDynamicCSS();
         });
-        
+
         _wAtBtn.addEventListener('click', function () {
             fixAtSign = !fixAtSign;
             saveConfig();
             _wAtKnob.style.transform = fixAtSign ? 'translateX(20px)' : 'translateX(0)';
             _wAtBtn.style.backgroundColor = fixAtSign ? 'var(--color-token-charts-blue, #339cff)' : '#555';
         });
-        
+
         _wFaFontInput.addEventListener('input', function () {
             savedFaFont = _wFaFontInput.value.trim();
             saveConfig();
             updateDynamicCSS();
         });
-        
+
         _wEnFontInput.addEventListener('input', function () {
             savedEnFont = _wEnFontInput.value.trim();
             saveConfig();
             updateDynamicCSS();
         });
-        
+
         _wCodeFontInput.addEventListener('input', function () {
             savedCodeFont = _wCodeFontInput.value.trim();
             saveConfig();
             updateDynamicCSS();
         });
-        
+
         _wLhInput.addEventListener('input', function () {
             savedLH = _wLhInput.value;
             saveConfig();
             updateDynamicCSS();
         });
-        
+
         _wLhResetBtn.addEventListener('click', function () {
             _wLhInput.value = '1.6';
             savedLH = '1.6';
