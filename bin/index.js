@@ -27,6 +27,7 @@ import {
     restoreMacBundleBackup,
     signMacAppBundle
 } from './macos-signing.js';
+import { buildShortcutInvocation } from './windows-shortcut.cjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -219,17 +220,8 @@ function createWindowsShortcut(exePath, destDir) {
     try {
         const desktopPath = path.join(os.homedir(), 'Desktop');
         const shortcutPath = path.join(desktopPath, 'Codex (Patched).lnk');
-        
-        // Normalize paths for Windows shells
-        const normShortcutPath = shortcutPath.replace(/\//g, '\\');
-        const normExePath = exePath.replace(/\//g, '\\');
-        const normDestDir = destDir.replace(/\//g, '\\');
-
-        const script = `$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('${normShortcutPath}'); $Shortcut.TargetPath = '${normExePath}'; $Shortcut.WorkingDirectory = '${normDestDir}'; $Shortcut.Save();`;
-        // Escape single quotes for PowerShell
-        const escapedScript = script.replace(/'/g, "''");
-        
-        execFileSync('powershell', ['-Command', escapedScript], { stdio: 'ignore' });
+        const { args, env } = buildShortcutInvocation(exePath, destDir, shortcutPath);
+        execFileSync('powershell', args, { stdio: 'ignore', env });
         return shortcutPath;
     } catch (e) {
         return null;
