@@ -2,6 +2,21 @@
 
 All notable changes to Codex Smart RTL are documented here.
 
+## [1.6.2] - 2026-08-04
+
+### Security
+
+- Hardened Windows shortcut creation by invoking PowerShell directly and passing shortcut paths through child-process environment variables. Paths are no longer interpreted as PowerShell source code.
+
+### Added
+
+- Focused regression tests for Windows paths containing quotes, semicolons, hash characters, and spaces.
+
+### Validation
+
+- `npm test` passes all 47 tests.
+- `npm pack --dry-run` includes the Windows shortcut helper in the publishable package.
+
 ## [1.6.1] - 2026-08-03
 
 ### Fixed
