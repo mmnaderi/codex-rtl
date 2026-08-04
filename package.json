@@ -1,6 +1,6 @@
 {
   "name": "codex-rtl",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "A smart RTL (Right-to-Left) patcher with UI settings for the ChatGPT/Codex desktop application.",
   "main": "./bin/index.js",
   "bin": {
