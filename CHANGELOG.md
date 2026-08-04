@@ -2,6 +2,18 @@
 
 All notable changes to Codex Smart RTL are documented here.
 
+## [1.6.3] - 2026-08-04
+
+### Changed
+
+- The configured Code Font now also applies to Codex terminal rows, which are rendered outside the conversation scope.
+
+### Validation
+
+- Added a payload smoke test for the terminal Code Font rule.
+- `npm test` passes all 48 tests.
+- `npm pack --dry-run` produces the publishable v1.6.3 package.
+
 ## [1.6.2] - 2026-08-04
 
 ### Security

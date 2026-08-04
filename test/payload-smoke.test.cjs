@@ -113,6 +113,15 @@ test('code stays LTR', () => {
     assert.strictEqual(window.document.querySelector('pre').getAttribute('dir'), 'ltr');
 });
 
+test('Code Font also targets Codex terminal rows', () => {
+    const { window } = run(Object.assign({}, DEFAULT, { codeFont: 'JetBrainsMono Nerd Font' }));
+    const css = window.document.getElementById('codex-rtl-style').textContent;
+    assert.ok(
+        css.includes(".xterm-dom-renderer-owner-1 .xterm-rows{font-family:'JetBrainsMono Nerd Font', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace!important;}"),
+        'terminal rows should inherit the configured Code Font'
+    );
+});
+
 test('disabled config (isRTL:false) still loads and mounts the widget', () => {
     const { errors, threw, window } = run(Object.assign({}, DEFAULT, { isRTL: false }));
     assert.strictEqual(threw, null, threw && threw.stack);

@@ -466,6 +466,8 @@
                 '.rtl-widget-container,.rtl-widget-container *{direction:ltr!important;text-align:left!important;unicode-bidi:isolate!important;}',
                 forceRtlStyle,
                 C + 'pre,' + C + 'code,' + C + 'pre *,' + C + 'code *,' + C + '[data-line] span{font-family:' + codeFontStr + '!important;}',
+                // Codex terminals are rendered outside the conversation scope.
+                '.xterm-dom-renderer-owner-1 .xterm-rows{font-family:' + codeFontStr + '!important;}',
                 [C + 'p', C + 'li', C + 'h1', C + 'h2', C + 'h3', '[contenteditable="true"] p', '[data-lexical-text="true"]'].join(',') + '{line-height:' + savedLH + '!important;}'
             ].join('\n');
 
