@@ -24,7 +24,7 @@ Codex Smart RTL injects an RTL engine into the app, fixes mixed-direction typing
 
 You don't need to download any files manually. Install Node.js first, then run the command for your operating system.
 
-The patcher automatically prefers the current `/Applications/ChatGPT.app` Codex bundle and falls back to a legacy `Codex.app`. `ChatGPT Classic.app` is not a patch target because it does not use an Electron `app.asar` archive.
+The patcher automatically checks `~/Applications` and `/Applications` for the current `ChatGPT.app` Codex bundle and falls back to a legacy `Codex.app`. `ChatGPT Classic.app` is not a patch target because it does not use an Electron `app.asar` archive.
 
 ### macOS
 Before running the patcher, make sure [Node.js](https://nodejs.org) is installed. You can install it from the official website, or if you already use Homebrew:
@@ -130,7 +130,7 @@ Codex Smart RTL یک موتور RTL را به برنامه تزریق می‌ک�
 
 نیازی نیست فایل‌های پروژه را دستی دانلود کنید. ابتدا Node.js را نصب کنید، سپس دستور مربوط به سیستم‌عامل خود را اجرا کنید.
 
-پچر ابتدا `ChatGPT.app` جدید را پیدا می‌کند و سپس به `Codex.app` قدیمی fallback می‌کند. `ChatGPT Classic.app` هدف پچ نیست، چون فایل Electron `app.asar` ندارد.
+پچر به طور خودکار مسیرهای `~/Applications` و `/Applications` را برای پیدا کردن `ChatGPT.app` جدید بررسی می‌کند و در صورت نیاز به `Codex.app` قدیمی fallback می‌کند. `ChatGPT Classic.app` هدف پچ نیست، چون فایل Electron `app.asar` ندارد.
 
 ### در مک (macOS)
 قبل از اجرای پچر، مطمئن شوید [Node.js](https://nodejs.org) روی سیستم شما نصب است. می‌توانید آن را از سایت رسمی Node.js نصب کنید، یا اگر از Homebrew استفاده می‌کنید:
@@ -223,7 +223,7 @@ npx codex-rtl --restore
 
 لا حاجة لتنزيل أي ملفات يدويًا. ثبِّت Node.js أولًا، ثم شغِّل الأمر الخاص بنظام تشغيلك.
 
-تُفضِّل الأداة تلقائيًا حزمة `/Applications/ChatGPT.app` الحالية وتعود إلى `Codex.app` القديمة. أما `ChatGPT Classic.app` فليست هدفًا للتصحيح لأنها لا تستخدم أرشيف Electron `app.asar`.
+تتحقق الأداة تلقائيًا من مسارات `~/Applications` و `/Applications` للبحث عن حزمة `ChatGPT.app` الحالية وتعود إلى `Codex.app` القديمة. أما `ChatGPT Classic.app` فليست هدفًا للتصحيح لأنها لا تستخدم أرشيف Electron `app.asar`.
 
 ### ماك (macOS)
 ```bash

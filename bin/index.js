@@ -128,7 +128,10 @@ function handleMacPermissionError(err) {
 
 function getDefaultPaths() {
     if (os.platform() === 'darwin') {
+        const home = os.homedir();
         return [
+            path.join(home, 'Applications', 'ChatGPT.app', 'Contents', 'Resources', 'app.asar'),
+            path.join(home, 'Applications', 'Codex.app', 'Contents', 'Resources', 'app.asar'),
             '/Applications/ChatGPT.app/Contents/Resources/app.asar',
             '/Applications/Codex.app/Contents/Resources/app.asar'
         ];
