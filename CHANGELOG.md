@@ -2,6 +2,18 @@
 
 All notable changes to Codex Smart RTL are documented here.
 
+## [1.6.4] - 2026-08-28
+
+### Added
+
+- Support macOS ChatGPT/Codex installations located in the user's `~/Applications` directory alongside system-wide `/Applications` (#8).
+- Added a helpful tip in CLI success output and updated documentation in English, Persian, and Arabic regarding official app updates and Sparkle code signature requirements (#6).
+
+### Validation
+
+- `npm test` passes all 48 tests.
+- `npm pack --dry-run` produces the publishable v1.6.4 package.
+
 ## [1.6.3] - 2026-08-04
 
 ### Changed
