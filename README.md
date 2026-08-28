@@ -59,7 +59,7 @@ npx codex-rtl
 ```
 
 > [!WARNING]
-> **App Updates:** Since updating ChatGPT/Codex overwrites its internal files, the RTL patch will be removed. You will need to run the installation command again after each update to re-apply the patch.
+> **App Updates:** To install official ChatGPT/Codex updates, first run `npx codex-rtl --restore`, update the application inside ChatGPT/Codex, and then re-run `npx codex-rtl` to re-apply the RTL patch. (Patched Electron apps use ad-hoc signatures for ASAR integrity, which macOS Sparkle updater requires restoring before accepting official updates).
 
 ## Restoring to Original (Uninstall)
 
@@ -165,7 +165,7 @@ npx codex-rtl
 ```
 
 > [!WARNING]
-> **به‌روزرسانی برنامه:** آپدیت ChatGPT/Codex فایل‌های داخلی را بازنویسی می‌کند؛ بنابراین پس از هر آپدیت، دستور نصب را مجدداً اجرا کنید.
+> **به‌روزرسانی برنامه:** برای دریافت و نصب آپدیت‌های رسمی ChatGPT/Codex، ابتدا دستور `npx codex-rtl --restore` را اجرا کنید، سپس نرم‌افزار را از داخل برنامه آپدیت کرده و مجدداً `npx codex-rtl` را برای اعمال پچ بزنید. (به دلیل تغییر کدهای داخلی و الزام امنیتی امضای دیجیتال اپل، سیستم آپدیت Sparkle تا زمان بازگردانی امضای اصلی اجازهٔ آپدیت نمی‌دهد).
 
 ## بازگردانی به حالت اولیه (Uninstall)
 
@@ -250,7 +250,7 @@ npx codex-rtl
 ```
 
 > [!WARNING]
-> **تحديثات التطبيق:** يُعيد تحديث ChatGPT/Codex كتابة ملفاته الداخلية فيُزال التصحيح؛ أعد تشغيل الأمر بعد كل تحديث.
+> **تحديثات التطبيق:** لتثبيت تحديثات ChatGPT/Codex الرسمية، شغِّل أولًا `npx codex-rtl --restore`، ثم قم بتحديث التطبيق من داخله، وأعد تشغيل `npx codex-rtl` لإعادة تطبيق التصحیح. (يتطلب نظام تحديث Sparkle استعادة التوقيع الرسمي الأصلي قبل قبول التحديثات الرسمية).
 
 ## الاستعادة إلى الحالة الأصلية (إلغاء التثبيت)
 

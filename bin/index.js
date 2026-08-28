@@ -751,6 +751,7 @@ try {
             }
         } else {
             console.log(green('\n✨ RTL Features and DevTools have been enabled. Please restart ChatGPT/Codex to see the changes.\n'));
+            console.log(yellow('💡 Tip: To install official app updates in the future, run "npx codex-rtl --restore", update the app, then re-patch.\n'));
         }
     } catch (e) {
         spinner.fail('Failed to repack ASAR.');
