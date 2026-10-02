@@ -102,7 +102,15 @@
             if (!src) return false;
             if (!/[a-zA-Z]{2,}/.test(src)) return false;
             if (!hasRTL(src)) return false;
-            return BR_OR_NL_SPLIT.test(el.innerHTML) || src.indexOf('\n') !== -1;
+            if (!(BR_OR_NL_SPLIT.test(el.innerHTML) || src.indexOf('\n') !== -1)) return false;
+            // Per-line plaintext only helps when some line is purely LTR. If every
+            // line carries RTL text, one RTL base is right for all of them, and
+            // plaintext would flip the lines that open with a Latin word.
+            var lines = (el.innerText || src).split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                if (firstStrong(lines[i]) && !hasRTL(lines[i])) return true;
+            }
+            return false;
         }
 
         function splitToDirectionalSpans(el) {
@@ -343,6 +351,9 @@
                 } else {
                     input.style.direction = 'ltr'; input.style.textAlign = 'left';
                 }
+                // Attribute changes on the editor root are ignored by ProseMirror and
+                // not observed by Lexical, so this is as safe as the style writes above.
+                if (input.getAttribute('data-rtl-dir') !== (dir || 'ltr')) input.setAttribute('data-rtl-dir', dir || 'ltr');
             });
         }
 
@@ -375,13 +386,24 @@
             // ([data-rtl-island] > span) or later cascade order (pre code
             // descendants), so isolation still overrides plaintext.
             var C = CONVERSATION_SEL + ' ';
+            // Plaintext only where the engine has NOT decided a direction: plaintext
+            // takes the base direction from the first strong character and ignores
+            // dir/direction, so on a [dir] element it would turn a Persian sentence
+            // that opens with a Latin word ("API ...") back into LTR.
             var prose = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'span', 'div', '[role="presentation"]']
-                .map(function (t) { return C + t; }).join(',');
+                .map(function (t) { return C + t + ':not([dir])'; }).join(',');
             var codeSel = [C + 'pre', C + '.code-block__code', C + 'pre *', C + 'code *', C + 'pre span', C + 'code span', C + '[data-line] span'].join(',');
             s.textContent = [
                 prose + '{unicode-bidi:plaintext!important;text-align:start!important}',
+                // No [dir="ltr"] counterpart: the UA sheet already isolates [dir]
+                // elements, and an !important ltr rule would outrank Force RTL on
+                // English paragraphs the engine pinned to dir="ltr".
+                C + '[dir="rtl"]{direction:rtl!important;unicode-bidi:isolate!important;text-align:start!important}',
                 // Composer input (rich-text editor, lives outside the thread scroller).
                 '[contenteditable="true"] p,[data-lexical-text="true"]{unicode-bidi:plaintext!important;text-align:start!important}',
+                // Same plaintext trap in the composer: once processInput has detected
+                // RTL, give its lines an RTL base instead of first-strong.
+                '[data-rtl-dir="rtl"] p,[data-rtl-dir="rtl"] [data-lexical-text="true"]{direction:rtl!important;unicode-bidi:isolate!important;text-align:start!important}',
                 '.rtl-widget-container,.rtl-widget-container *{direction:ltr!important;text-align:left!important;unicode-bidi:isolate!important}',
                 codeSel + '{unicode-bidi:isolate!important;direction:ltr!important;text-align:left!important}',
                 C + 'code{unicode-bidi:isolate!important;direction:ltr!important}',
@@ -415,6 +437,9 @@
                 el.style.paddingRight = '';
                 el.style.paddingLeft = '';
                 el.style.listStylePosition = '';
+            });
+            document.querySelectorAll('[data-rtl-dir]').forEach(function (el) {
+                el.removeAttribute('data-rtl-dir');
             });
             document.querySelectorAll('[' + ISLAND_FLAG + ']').forEach(function (span) {
                 if (span.parentNode) {

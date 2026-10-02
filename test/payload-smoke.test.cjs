@@ -43,6 +43,7 @@ function run(config) {
                 <p>Hello world, this is a plain English paragraph.</p>
                 <div>النتيجة هي 2 + 3 = 5 تمام</div>
                 <pre><code>const x = 1 + 2;</code></pre>
+                <p id="latin-first">API رو صدا بزن و نتیجه رو ببین</p>
             </div>
             <div id="composer" contenteditable="true"><p>اكتب رسالتك هنا</p></div>
         </main>
@@ -98,6 +99,22 @@ test('RTL is scoped to the conversation: sidebar/chrome stays LTR', () => {
     const css = window.document.getElementById('codex-rtl-baseline').textContent;
     assert.ok(css.includes('.thread-scroll-container'), 'baseline CSS should be scoped to the thread');
     assert.ok(!/(^|,|\})\s*div\s*\{unicode-bidi:plaintext/.test(css), 'baseline must not flip every div');
+});
+
+test('RTL paragraph that opens with a Latin word keeps its RTL base', () => {
+    // unicode-bidi:plaintext takes the base direction from the first strong
+    // character and ignores dir, so it must not reach a [dir] element.
+    const { window } = run(DEFAULT);
+    const p = window.document.getElementById('latin-first');
+    assert.strictEqual(p.getAttribute('dir'), 'rtl');
+    assert.notStrictEqual(window.getComputedStyle(p).unicodeBidi, 'plaintext');
+});
+
+test('composer lines get an RTL base once RTL text is detected', () => {
+    const { window } = run(DEFAULT);
+    const composer = window.document.getElementById('composer');
+    assert.strictEqual(composer.getAttribute('data-rtl-dir'), 'rtl');
+    assert.notStrictEqual(window.getComputedStyle(composer.querySelector('p')).unicodeBidi, 'plaintext');
 });
 
 test('bare arithmetic is isolated as an LTR island', () => {
